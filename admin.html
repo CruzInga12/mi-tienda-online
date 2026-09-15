@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Panel de Administración - Tienda</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #f4f6f9; margin: 0; padding: 20px; }
+    .container { max-width: 1000px; margin: 0 auto; }
+    .card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    h2 { margin-top: 0; color: #333; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    th, td { padding: 10px; border-bottom: 1px solid #ddd; text-align: left; }
+    th { background: #343a40; color: white; }
+    input { padding: 8px; margin: 5px 0; width: 95%; }
+    .btn { background: #28a745; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; }
+    .btn-danger { background: #dc3545; }
+    .btn-back { display: inline-block; margin-bottom: 15px; text-decoration: none; color: #007bff; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <a href="/" class="btn-back">← Volver a la Tienda</a>
+  <h1>Panel de Control (Backoffice)</h1>
+
+  <!-- Formulario Nuevo Producto -->
+  <div class="card">
+    <h2>Agregar Nuevo Producto</h2>
+    <form id="form-producto">
+      <input type="text" id="nombre" placeholder="Nombre del producto" required>
+      <input type="number" step="0.01" id="precio" placeholder="Precio (S/)" required>
+      <input type="number" id="stock" placeholder="Stock inicial" required>
+      <input type="text" id="imagen" placeholder="URL Imagen (opcional)">
+      <button type="submit" class="btn">Guardar Producto</button>
+    </form>
+  </div>
+
+  <!-- Lista de Productos -->
+  <div class="card">
+    <h2>Gestión de Inventario</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nombre</th>
+          <th>Precio</th>
+          <th>Stock</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="tabla-productos"></tbody>
+    </table>
+  </div>
+
+  <!-- Registro Global de Ventas -->
+  <div class="card">
+    <h2>Ventas Realizadas</h2>
+    <table>
+      <thead>
+        <tr>
+          <th># Orden</th>
+          <th>Cliente</th>
+          <th>Monto</th>
+          <th>Fecha</th>
+        </tr>
+      </thead>
+      <tbody id="tabla-ventas"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    cargarInventario();
+    cargarVentas();
+
+    document.getElementById('form-producto').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const producto = {
+        nombre: document.getElementById('nombre').value,
+        precio: document.getElementById('precio').value,
+        stock: document.getElementById('stock').value,
+        imagen: document.getElementById('imagen').value
+      };
+
+      await fetch('/api/admin/productos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(producto)
+      });
+
+      e.target.reset();
+      cargarInventario();
+    });
+  });
+
+  async function cargarInventario() {
+    const res = await fetch('/api/productos');
+    const productos = await res.json();
+    const tbody = document.getElementById('tabla-productos');
+    tbody.innerHTML = '';
+
+    productos.forEach(p => {
+      tbody.innerHTML += `
+        <tr>
+          <td>${p.id}</td>
+          <td>${p.nombre}</td>
+          <td>S/ ${Number(p.precio).toFixed(2)}</td>
+          <td>${p.stock}</td>
+          <td>
+            <button class="btn btn-danger" onclick="eliminarProducto(${p.id})">Eliminar</button>
+          </td>
+        </tr>
+      `;
+    });
+  }
+
+  async function eliminarProducto(id) {
+    if (confirm('¿Eliminar este producto?')) {
+      await fetch(`/api/admin/productos/${id}`, { method: 'DELETE' });
+      cargarInventario();
+    }
+  }
+
+  async function cargarVentas() {
+    const res = await fetch('/api/admin/pedidos');
+    const ventas = await res.json();
+    const tbody = document.getElementById('tabla-ventas');
+    tbody.innerHTML = '';
+
+    ventas.forEach(v => {
+      tbody.innerHTML += `
+        <tr>
+          <td>#${v.id}</td>
+          <td>${v.usuario_nombre || 'Invitado'} (${v.email || 'N/A'})</td>
+          <td>S/ ${Number(v.monto).toFixed(2)}</td>
+          <td>${new Date(v.fecha).toLocaleString()}</td>
+        </tr>
+      `;
+    });
+  }
+</script>
+
+</body>
+</html>

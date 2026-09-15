@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi Historial de Compras</title>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; }
+    .container { max-width: 900px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+    h2 { color: #333; margin-bottom: 20px; text-align: center; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; }
+    th { background-color: #007bff; color: white; }
+    tr:hover { background-color: #f1f1f1; }
+    .status { background-color: #28a745; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+    .items-list { font-size: 13px; color: #555; }
+    .btn-back { display: inline-block; margin-bottom: 20px; text-decoration: none; color: #007bff; font-weight: bold; }
+    .empty-msg { text-align: center; color: #888; margin-top: 30px; font-size: 16px; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <a href="/" class="btn-back">← Volver a la Tienda</a>
+    <h2>Historial de Mis Pedidos</h2>
+
+    <div id="contenido">
+      <p id="cargando" style="text-align: center; color: #666;">Cargando tus compras...</p>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const contenedor = document.getElementById('contenido');
+      const usuario = JSON.parse(localStorage.getItem('usuario'));
+
+      if (!usuario) {
+        contenedor.innerHTML = '<p class="empty-msg">Debes <a href="/index.html">iniciar sesión</a> para ver tu historial.</p>';
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/pedidos/${usuario.id}`);
+        const pedidos = await res.json();
+
+        if (!Array.isArray(pedidos) || pedidos.length === 0) {
+          contenedor.innerHTML = '<p class="empty-msg">Aún no has realizado ninguna compra.<br><br><a href="/index.html" class="btn-back">Ir a comprar</a></p>';
+          return;
+        }
+
+        let html = `
+          <table>
+            <thead>
+              <tr>
+                <th>ID Orden</th>
+                <th>Fecha</th>
+                <th>Productos</th>
+                <th>Total</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+
+        pedidos.forEach(pedido => {
+          let items = [];
+          try {
+            items = typeof pedido.items === 'string' ? JSON.parse(pedido.items) : pedido.items;
+          } catch(e) { items = []; }
+
+          // Contempla variaciones de claves 'nombre/name' y 'cantidad/quantity'
+          const listaProductos = items.map(i => {
+            const nombre = i.nombre || i.name || 'Producto';
+            const cantidad = i.cantidad || i.quantity || 1;
+            return `${nombre} (x${cantidad})`;
+          }).join('<br>');
+
+          html += `
+            <tr>
+              <td><strong>#${pedido.id}</strong><br><small style="color:#888">${pedido.paypal_order_id || 'N/A'}</small></td>
+              <td>${pedido.fecha ? new Date(pedido.fecha).toLocaleString('es-PE') : 'Reciente'}</td>
+              <td class="items-list">${listaProductos || 'Detalles de compra'}</td>
+              <td><strong>S/ ${Number(pedido.monto || 0).toFixed(2)}</strong></td>
+              <td><span class="status">Completado</span></td>
+            </tr>
+          `;
+        });
+
+        html += '</tbody></table>';
+        contenedor.innerHTML = html;
+
+      } catch (error) {
+        console.error('Error obteniendo historial:', error);
+        contenedor.innerHTML = '<p class="empty-msg">No se pudo cargar el historial de compras.</p>';
+      }
+    });
+  </script>
+</body>
+</html>

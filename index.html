@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi Tienda Virtual</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <header>
+    <h1>Mi Tienda Virtual</h1>
+    
+    <div class="user-nav">
+      <span id="user-greeting"></span>
+      <a href="/historial.html" id="btn-historial" style="display: none; font-size: 14px; margin-right: 10px; text-decoration: none; color: #007bff; font-weight: bold;">📋 Mis Compras</a>
+      <a href="/auth.html" id="btn-login-link" style="text-decoration: none; color: #333; margin-right: 10px;">Iniciar Sesión</a>
+      <button id="btn-logout" style="display: none;">Cerrar Sesión</button>
+    </div>
+
+    <div class="user-actions">
+      <button id="btn-cart">🛒 Carrito (<span id="cart-count">0</span>)</button>
+    </div>
+  </header>
+
+  <main class="container" style="max-width: 1100px; margin: 20px auto; padding: 0 15px;">
+    
+    <!-- BARRA DE BÚSQUEDA Y FILTRO DE CATEGORÍAS -->
+    <section style="display: flex; gap: 10px; margin-bottom: 25px;">
+      <input 
+        type="text" 
+        id="input-buscar" 
+        placeholder="Buscar productos..." 
+        style="flex: 2; padding: 10px; border: 1px solid #ccc; border-radius: 6px;"
+      >
+      <select 
+        id="select-categoria" 
+        style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 6px;"
+      >
+        <option value="Todas">Todas las categorías</option>
+        <option value="Audio">Audio</option>
+        <option value="Periféricos">Periféricos</option>
+        <option value="Monitores">Monitores</option>
+      </select>
+    </section>
+
+    <!-- Catálogo de Productos -->
+    <section class="products-section">
+      <h2>Productos Disponibles</h2>
+      <div id="product-list" class="product-grid"></div>
+    </section>
+
+    <!-- Carrito Lateral -->
+    <aside id="cart-modal" class="cart-modal hidden">
+      <div class="cart-content">
+        <h2>Tu Carrito</h2>
+        <div id="cart-items"></div>
+        <div class="cart-total">
+          <strong>Total: S/ <span id="cart-total-price">0.00</span></strong>
+        </div>
+        <div class="cart-actions">
+          <button id="btn-close-cart">Cerrar</button>
+          <button id="btn-checkout">Pagar Ahora</button>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

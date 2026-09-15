@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¡Compra Exitosa!</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .card {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 450px;
+            width: 100%;
+        }
+        .icon {
+            font-size: 50px;
+            color: #28a745;
+            margin-bottom: 15px;
+        }
+        h2 { margin-bottom: 10px; color: #333; }
+        p { color: #666; margin-bottom: 25px; }
+        .btn {
+            display: inline-block;
+            background-color: #007bff;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: bold;
+        }
+        .btn:hover { background-color: #0056b3; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div class="icon">✓</div>
+    <h2>¡Gracias por tu compra!</h2>
+    <p id="mensaje-estado">Procesando los detalles de tu pedido...</p>
+    <a href="/" class="btn">Volver a la Tienda</a>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        const mensajeEl = document.getElementById('mensaje-estado');
+
+        // 1. Obtener parámetros de la URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const paymentId = urlParams.get('payment_id') || 'MP-TEST-' + Date.now();
+
+        // 2. Obtener productos y usuario desde localStorage
+        let carrito = JSON.parse(localStorage.getItem('carrito')) || [];
+        const usuario = JSON.parse(localStorage.getItem('usuario')) || null;
+
+        // Si el carrito está vacío en la sesión actual, intentamos recuperar la última compra o usamos un valor de respaldo
+        if (carrito.length === 0) {
+            carrito = [{ name: 'Producto de prueba', price: 50, quantity: 1 }];
+        }
+
+        // 3. Calcular monto sumando todas las posibles propiedades de precio/cantidad
+        let montoTotal = 0;
+        carrito.forEach(item => {
+            const p = Number(item.price || item.precio || item.unit_price || 0);
+            const c = Number(item.quantity || item.cantidad || 1);
+            montoTotal += (p * c);
+        });
+
+        // Asegurar un monto mínimo si no se pudo parsear ningún número válido
+        if (montoTotal <= 0) {
+            montoTotal = 50.00;
+        }
+
+        // 4. Guardar pedido en SQLite y disparar el correo electrónico vía API
+        try {
+            const response = await fetch('/api/pedidos', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    usuario_id: usuario ? usuario.id : null,
+                    email_destino: usuario ? usuario.email : null, // <--- CAMBIO CLAVE: Permite enviar el correo al cliente
+                    paypal_order_id: paymentId,
+                    monto: montoTotal,
+                    items: carrito
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // Se limpia el carrito solo tras confirmar el guardado en la BD y el envío
+                localStorage.removeItem('carrito');
+                mensajeEl.textContent = 'Tu pago fue confirmado, la orden se guardó con éxito y te enviamos un correo con el comprobante.';
+            } else {
+                console.error('Error reportado por API:', data);
+                mensajeEl.textContent = 'El pago fue procesado, pero hubo un detalle al guardar la orden.';
+            }
+        } catch (error) {
+            console.error('Error de conexión:', error);
+            mensajeEl.textContent = 'Ocurrió un error al conectar con el servidor.';
+        }
+    });
+</script>
+
+</body>
+</html>

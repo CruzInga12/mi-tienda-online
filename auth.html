@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Acceso de Usuarios</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f3f4f6; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+    .card { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; max-width: 380px; }
+    h2 { margin-top: 0; text-align: center; color: #1f2937; }
+    .form-group { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 5px; color: #4b5563; font-size: 14px; }
+    input { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 4px; box-sizing: border-box; }
+    button { width: 100%; padding: 10px; background: #2563eb; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+    button:hover { background: #1d4ed8; }
+    .toggle-link { text-align: center; margin-top: 15px; font-size: 14px; }
+    .toggle-link a { color: #2563eb; text-decoration: none; font-weight: bold; }
+    .alert { padding: 10px; margin-bottom: 15px; border-radius: 4px; display: none; font-size: 14px; }
+    .alert-error { background: #fee2e2; color: #991b1b; }
+    .alert-success { background: #d1fae5; color: #065f46; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div id="alert-box" class="alert"></div>
+
+    <div id="login-form">
+      <h2>Iniciar Sesión</h2>
+      <form id="form-login">
+        <div class="form-group"><label>Email</label><input type="email" id="login-email" required></div>
+        <div class="form-group"><label>Contraseña</label><input type="password" id="login-password" required></div>
+        <button type="submit">Entrar</button>
+      </form>
+      <div class="toggle-link">¿No tienes cuenta? <a href="#" id="show-register">Regístrate</a></div>
+    </div>
+
+    <div id="register-form" style="display: none;">
+      <h2>Crear Cuenta</h2>
+      <form id="form-register">
+        <div class="form-group"><label>Nombre Completo</label><input type="text" id="reg-nombre" required></div>
+        <div class="form-group"><label>Email</label><input type="email" id="reg-email" required></div>
+        <div class="form-group"><label>Contraseña</label><input type="password" id="reg-password" required></div>
+        <button type="submit">Registrarse</button>
+      </form>
+      <div class="toggle-link">¿Ya tienes cuenta? <a href="#" id="show-login">Iniciar Sesión</a></div>
+    </div>
+  </div>
+
+  <script>
+    const alertBox = document.getElementById('alert-box');
+    const loginForm = document.getElementById('login-form');
+    const registerForm = document.getElementById('register-form');
+
+    function showAlert(msg, isError = true) {
+      alertBox.textContent = msg;
+      alertBox.className = `alert ${isError ? 'alert-error' : 'alert-success'}`;
+      alertBox.style.display = 'block';
+    }
+
+    document.getElementById('show-register').onclick = () => { loginForm.style.display = 'none'; registerForm.style.display = 'block'; alertBox.style.display = 'none'; };
+    document.getElementById('show-login').onclick = () => { registerForm.style.display = 'none'; loginForm.style.display = 'block'; alertBox.style.display = 'none'; };
+
+    document.getElementById('form-register').onsubmit = async (e) => {
+      e.preventDefault();
+      const res = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nombre: document.getElementById('reg-nombre').value,
+          email: document.getElementById('reg-email').value,
+          password: document.getElementById('reg-password').value
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showAlert('¡Cuenta creada con éxito! Redirigiendo...', false);
+        setTimeout(() => document.getElementById('show-login').click(), 1200);
+      } else {
+        showAlert(data.error || 'Error al registrar.');
+      }
+    };
+
+    document.getElementById('form-login').onsubmit = async (e) => {
+      e.preventDefault();
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: document.getElementById('login-email').value,
+          password: document.getElementById('login-password').value
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('usuario', JSON.stringify(data.usuario));
+        showAlert('¡Bienvenido! Redirigiendo a la tienda...', false);
+        setTimeout(() => window.location.href = '/', 1000);
+      } else {
+        showAlert(data.error || 'Credenciales incorrectas.');
+      }
+    };
+  </script>
+</body>
+</html>
