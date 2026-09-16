@@ -6,22 +6,27 @@
   <title>Mi Historial de Compras</title>
   <style>
     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; }
-    .container { max-width: 900px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+    .container { max-width: 950px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
     h2 { color: #333; margin-bottom: 20px; text-align: center; }
     table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; }
+    th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; vertical-align: middle; }
     th { background-color: #007bff; color: white; }
     tr:hover { background-color: #f1f1f1; }
     .status { background-color: #28a745; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
     .items-list { font-size: 13px; color: #555; }
     .btn-back { display: inline-block; margin-bottom: 20px; text-decoration: none; color: #007bff; font-weight: bold; }
     .empty-msg { text-align: center; color: #888; margin-top: 30px; font-size: 16px; }
+    
+    /* Estilos para las imágenes de los productos */
+    .img-producto { width: 55px; height: 55px; object-fit: cover; border-radius: 6px; border: 1px solid #e0e0e0; display: block; margin-bottom: 4px; }
+    .item-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+    .item-row:last-child { margin-bottom: 0; }
   </style>
 </head>
 <body>
 
   <div class="container">
-    <a href="/" class="btn-back">← Volver a la Tienda</a>
+    <a href="index.html" class="btn-back">← Volver a la Tienda</a>
     <h2>Historial de Mis Pedidos</h2>
 
     <div id="contenido">
@@ -35,11 +40,50 @@
       const usuario = JSON.parse(localStorage.getItem('usuario'));
 
       if (!usuario) {
-        contenedor.innerHTML = '<p class="empty-msg">Debes <a href="/index.html">iniciar sesión</a> para ver tu historial.</p>';
+        contenedor.innerHTML = '<p class="empty-msg">Debes <a href="index.html">iniciar sesión</a> para ver tu historial.</p>';
         return;
       }
 
       try {
+        // 0. Capturar retorno exitoso de Mercado Pago y guardar pedido automáticamente en SQLite
+        const params = new URLSearchParams(window.location.search);
+        const status = params.get('status');
+
+        if (status === 'approved') {
+          const carrito = JSON.parse(localStorage.getItem('carrito')) || [];
+          if (carrito.length > 0) {
+            const montoTotal = carrito.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
+            
+            // Enviamos el registro al servidor
+            await fetch('/api/pedidos', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                usuario_id: usuario.id,
+                paypal_order_id: 'MP-' + Math.floor(Math.random() * 1000000),
+                monto: montoTotal,
+                items: carrito
+              })
+            });
+
+            // Limpiamos el carrito local para que no se duplique si recargan la página
+            localStorage.removeItem('carrito');
+            
+            // Limpiamos los parámetros de la URL de forma limpia sin recargar bruscamente
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }
+        }
+
+        // 1. Obtener el catálogo general para buscar las imágenes de los productos por ID o Nombre
+        const resProds = await fetch('/api/productos');
+        const catálogo = await resProds.json();
+        const mapaFotos = {};
+        catálogo.forEach(p => {
+          mapaFotos[p.id] = p.imagen;
+          if (p.nombre) mapaFotos[p.nombre.trim().toLowerCase()] = p.imagen;
+        });
+
+        // 2. Obtener las compras del usuario logueado desde la base de datos
         const res = await fetch(`/api/pedidos/${usuario.id}`);
         const pedidos = await res.json();
 
@@ -54,6 +98,7 @@
               <tr>
                 <th>ID Orden</th>
                 <th>Fecha</th>
+                <th>Imagen</th>
                 <th>Productos</th>
                 <th>Total</th>
                 <th>Estado</th>
@@ -68,17 +113,25 @@
             items = typeof pedido.items === 'string' ? JSON.parse(pedido.items) : pedido.items;
           } catch(e) { items = []; }
 
-          // Contempla variaciones de claves 'nombre/name' y 'cantidad/quantity'
+          // Generar columna de imágenes buscando la foto en el objeto, en la BD por ID o por nombre
+          const listaImagenes = items.map(i => {
+            const nombreItem = (i.nombre || i.name || '').trim().toLowerCase();
+            const imgUrl = i.imagen || i.image || mapaFotos[i.id] || mapaFotos[nombreItem] || 'https://via.placeholder.com/55';
+            return `<img src="${imgUrl}" class="img-producto" alt="Foto del producto" onerror="this.src='https://via.placeholder.com/55'">`;
+          }).join('');
+
+          // Generar columna de nombres y cantidades
           const listaProductos = items.map(i => {
             const nombre = i.nombre || i.name || 'Producto';
             const cantidad = i.cantidad || i.quantity || 1;
-            return `${nombre} (x${cantidad})`;
-          }).join('<br>');
+            return `<div style="height: 55px; display: flex; align-items: center; margin-bottom: 4px;"><strong>${nombre}</strong>&nbsp;(x${cantidad})</div>`;
+          }).join('');
 
           html += `
             <tr>
               <td><strong>#${pedido.id}</strong><br><small style="color:#888">${pedido.paypal_order_id || 'N/A'}</small></td>
               <td>${pedido.fecha ? new Date(pedido.fecha).toLocaleString('es-PE') : 'Reciente'}</td>
+              <td>${listaImagenes || '<img src="https://via.placeholder.com/55" class="img-producto">'}</td>
               <td class="items-list">${listaProductos || 'Detalles de compra'}</td>
               <td><strong>S/ ${Number(pedido.monto || 0).toFixed(2)}</strong></td>
               <td><span class="status">Completado</span></td>

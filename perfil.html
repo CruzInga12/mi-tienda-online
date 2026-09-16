@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi Perfil - RAIV</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- Encabezado simple -->
+  <header class="main-header">
+    <div class="header-container" style="justify-content: space-between;">
+      <a href="/" class="logo-brand">
+        <img src="/uploads/logo.png" alt="Logo RAIV" class="logo-img" onerror="this.style.display='none'">
+        <span class="brand-name">RAIV</span>
+      </a>
+      <a href="/" style="text-decoration: none; color: #333; font-weight: bold; display: flex; align-items: center; gap: 6px;">
+        <i class="fa-solid fa-arrow-left"></i> Volver a la tienda
+      </a>
+    </div>
+  </header>
+
+  <!-- Contenedor del Formulario de Perfil -->
+  <main class="container" style="max-width: 600px; margin: 40px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
+    <h2 style="margin-bottom: 20px; color: #1f2937;">Configuración de tu Perfil</h2>
+    
+    <form id="form-perfil" style="display: flex; flex-direction: column; gap: 15px;">
+      <div>
+        <label style="display: block; font-size: 14px; font-weight: bold; margin-bottom: 5px;">Nombre de perfil:</label>
+        <input type="text" id="perfil-nombre" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px;">
+      </div>
+
+      <div>
+        <label style="display: block; font-size: 14px; font-weight: bold; margin-bottom: 5px;">Correo electrónico:</label>
+        <input type="email" id="perfil-email" disabled style="width: 100%; padding: 10px; border: 1px solid #e5e7eb; background: #f9fafb; border-radius: 6px; color: #6b7280;">
+      </div>
+
+      <div>
+        <label style="display: block; font-size: 14px; font-weight: bold; margin-bottom: 5px;">Ciudad:</label>
+        <input type="text" id="perfil-ciudad" placeholder="Ej. Pucallpa" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px;">
+      </div>
+
+      <div>
+        <label style="display: block; font-size: 14px; font-weight: bold; margin-bottom: 5px;">Departamento / Región:</label>
+        <input type="text" id="perfil-departamento" placeholder="Ej. Ucayali" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px;">
+      </div>
+
+      <button type="submit" style="background: #2563eb; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px;">
+        Guardar Cambios
+      </button>
+    </form>
+  </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const usuario = JSON.parse(localStorage.getItem('usuario'));
+      if (!usuario) {
+        alert('Debes iniciar sesión.');
+        window.location.href = '/auth.html';
+        return;
+      }
+
+      // Rellenar campos con los datos actuales
+      document.getElementById('perfil-nombre').value = usuario.nombre || '';
+      document.getElementById('perfil-email').value = usuario.email || '';
+      document.getElementById('perfil-ciudad').value = usuario.ciudad || '';
+      document.getElementById('perfil-departamento').value = usuario.departamento || '';
+
+      // Manejar la actualización
+      document.getElementById('form-perfil').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const datosActualizados = {
+          id: usuario.id,
+          nombre: document.getElementById('perfil-nombre').value,
+          ciudad: document.getElementById('perfil-ciudad').value,
+          departamento: document.getElementById('perfil-departamento').value
+        };
+
+        try {
+          const res = await fetch('/api/actualizar-perfil', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(datosActualizados)
+          });
+
+          const data = await res.json();
+          if (res.ok) {
+            // Actualizar localStorage manteniendo el objeto del usuario
+            localStorage.setItem('usuario', JSON.stringify({ ...usuario, ...datosActualizados }));
+            alert('¡Perfil actualizado con éxito!');
+            window.location.href = '/';
+          } else {
+            alert(data.error || 'Error al actualizar perfil');
+          }
+        } catch (error) {
+          console.error('Error:', error);
+          alert('Error de conexión con el servidor.');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

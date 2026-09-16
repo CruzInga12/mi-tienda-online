@@ -3,69 +3,264 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mi Tienda Virtual</title>
+  <title>Mi Tienda Virtual - RAIV</title>
   <link rel="stylesheet" href="styles.css">
+  <!-- Íconos FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
-  <header>
-    <h1>Mi Tienda Virtual</h1>
-    
-    <div class="user-nav">
-      <span id="user-greeting"></span>
-      <a href="/historial.html" id="btn-historial" style="display: none; font-size: 14px; margin-right: 10px; text-decoration: none; color: #007bff; font-weight: bold;">📋 Mis Compras</a>
-      <a href="/auth.html" id="btn-login-link" style="text-decoration: none; color: #333; margin-right: 10px;">Iniciar Sesión</a>
-      <button id="btn-logout" style="display: none;">Cerrar Sesión</button>
-    </div>
+  <!-- Encabezado Principal Integrado -->
+  <header class="main-header">
+    <div class="header-container">
+      
+      <!-- Menú Hamburguesa / Categorías -->
+      <div class="menu-category-wrapper">
+        <button id="btn-menu-lateral" class="menu-toggle">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+      </div>
 
-    <div class="user-actions">
-      <button id="btn-cart">🛒 Carrito (<span id="cart-count">0</span>)</button>
+      <!-- Logo e Imagen de la Empresa -->
+      <a href="/" class="logo-brand">
+        <img src="logo.png" alt="Logo RAIV" class="logo-img" onerror="this.style.display='none'">
+        <span class="brand-name">RAIV</span>
+      </a>
+
+      <!-- Buscador Principal -->
+      <div class="search-bar">
+        <input type="text" id="input-buscar" placeholder="Buscar productos, marcas y más...">
+        <button type="button" aria-label="Buscar">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Acciones de Usuario y Sesión (Menú Desplegable por Hover) -->
+      <div class="header-actions">
+        
+        <!-- Contenedor principal con hover -->
+        <div class="user-menu-container" id="user-menu-wrapper" style="display: none;">
+          <div class="user-trigger-btn">
+            <div class="user-avatar-circle" id="user-initial">C</div>
+            <div class="user-trigger-text">
+              <span class="user-subtitle">Hola,</span>
+              <span class="user-name-title" id="user-display-name">Mi Cuenta</span>
+            </div>
+            <i class="fa-solid fa-chevron-down" style="font-size: 11px; color: #666;"></i>
+          </div>
+
+          <!-- Panel Flotante que aparece al poner el mouse -->
+          <div class="user-dropdown-panel">
+            <div class="dropdown-header-user">
+              <div class="user-avatar-circle large" id="user-initial-large">C</div>
+              <div>
+                <h4 id="dropdown-username">Nombre de Usuario</h4>
+                <p id="dropdown-email" style="font-size: 12px; color: #666; margin: 0;">correo@example.com</p>
+              </div>
+            </div>
+            <hr style="border: none; border-top: 1px solid #eee; margin: 10px 0;">
+            <ul class="dropdown-menu-list">
+              <li><a href="/perfil.html"><i class="fa-solid fa-user"></i> Tu perfil</a></li>
+              <li><a href="/historial.html"><i class="fa-solid fa-clipboard-list"></i> Tus pedidos</a></li>
+              <li><a href="#" onclick="alert('Próximamente: Reseñas')"><i class="fa-regular fa-star"></i> Tus reseñas</a></li>
+              <li><a href="#" onclick="alert('Próximamente: Cupones')"><i class="fa-solid fa-ticket"></i> Cupones y ofertas</a></li>
+              <li><a href="#" onclick="alert('Próximamente: Direcciones')"><i class="fa-solid fa-location-dot"></i> Direcciones de envío</a></li>
+              <li><hr style="border: none; border-top: 1px solid #f0f0f0; margin: 5px 0;"></li>
+              <li><button id="btn-logout-dropdown" class="dropdown-logout-btn"><i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión</button></li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Botón de Iniciar Sesión (Se muestra si NO hay sesión activa) -->
+        <a href="/auth.html" id="btn-login-link" class="user-action">
+          <i class="fa-regular fa-user"></i>
+          <span>Iniciar Sesión</span>
+        </a>
+
+        <!-- Botón del Carrito -->
+        <button id="btn-cart" class="cart-action-btn">
+          <div class="cart-icon-wrapper">
+            <i class="fa-solid fa-cart-shopping"></i>
+            <span class="cart-badge" id="cart-count">0</span>
+          </div>
+          <span>Carrito</span>
+        </button>
+      </div>
+
     </div>
   </header>
 
-  <main class="container" style="max-width: 1100px; margin: 20px auto; padding: 0 15px;">
-    
-    <!-- BARRA DE BÚSQUEDA Y FILTRO DE CATEGORÍAS -->
-    <section style="display: flex; gap: 10px; margin-bottom: 25px;">
-      <input 
-        type="text" 
-        id="input-buscar" 
-        placeholder="Buscar productos..." 
-        style="flex: 2; padding: 10px; border: 1px solid #ccc; border-radius: 6px;"
-      >
-      <select 
-        id="select-categoria" 
-        style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 6px;"
-      >
-        <option value="Todas">Todas las categorías</option>
-        <option value="Audio">Audio</option>
-        <option value="Periféricos">Periféricos</option>
-        <option value="Monitores">Monitores</option>
-      </select>
-    </section>
+  <!-- MENÚ LATERAL DE CATEGORÍAS (Estilo Oechsle) -->
+  <div id="side-menu-overlay" class="side-menu-overlay"></div>
+  <nav id="side-menu" class="side-menu">
+    <div class="side-menu-header">
+      <h3>Categorías</h3>
+      <button id="btn-close-side-menu" class="close-side-menu">&times;</button>
+    </div>
+    <ul id="side-category-list" class="side-category-list">
+      <!-- Se llenará dinámicamente -->
+    </ul>
+  </nav>
+
+  <!-- Contenido Principal -->
+  <main class="container" style="max-width: 1280px; margin: 25px auto; padding: 0 15px;">
 
     <!-- Catálogo de Productos -->
     <section class="products-section">
-      <h2>Productos Disponibles</h2>
-      <div id="product-list" class="product-grid"></div>
+      <h2 style="margin-bottom: 20px; font-size: 24px; color: #1f2937;">Productos Disponibles</h2>
+      <div id="product-list" class="product-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px;"></div>
     </section>
 
-    <!-- Carrito Lateral -->
+    <!-- Carrito Lateral / Modal -->
     <aside id="cart-modal" class="cart-modal hidden">
       <div class="cart-content">
         <h2>Tu Carrito</h2>
         <div id="cart-items"></div>
-        <div class="cart-total">
+        <div class="cart-total" style="margin-top: 15px; font-size: 18px;">
           <strong>Total: S/ <span id="cart-total-price">0.00</span></strong>
         </div>
-        <div class="cart-actions">
-          <button id="btn-close-cart">Cerrar</button>
-          <button id="btn-checkout">Pagar Ahora</button>
+        <div class="cart-actions" style="margin-top: 20px; display: flex; gap: 10px;">
+          <button id="btn-close-cart" style="background: #6b7280; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer;">Cerrar</button>
+          <button id="btn-checkout" style="background: #16a34a; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; flex-grow: 1;">Pagar Ahora</button>
         </div>
       </div>
     </aside>
+
   </main>
 
   <script src="app.js"></script>
+  <script>
+    // Cargar dinámicamente las categorías en el menú lateral estilo Oechsle
+    async function cargarMenuLateralCategorias() {
+      try {
+        const res = await fetch('/api/categorias');
+        const categorias = await res.json();
+        
+        const listaCategorias = document.getElementById('side-category-list');
+        if (!listaCategorias) return;
+
+        // Opción predeterminada para ver todos los productos
+        listaCategorias.innerHTML = `
+          <li onclick="seleccionarCategoriaMenu('Todas')">
+            <span>Todas las categorías</span>
+            <i class="fa-solid fa-chevron-right"></i>
+          </li>
+        `;
+
+        // Agregar cada categoría obtenida de la base de datos
+        categorias.forEach(cat => {
+          listaCategorias.innerHTML += `
+            <li onclick="seleccionarCategoriaMenu('${cat}')">
+              <span>${cat}</span>
+              <i class="fa-solid fa-chevron-right"></i>
+            </li>
+          `;
+        });
+      } catch (error) {
+        console.error('Error al cargar menú lateral:', error);
+      }
+    }
+
+    // Función al hacer clic en una categoría del menú lateral
+    function seleccionarCategoriaMenu(categoria) {
+      if (typeof window.filtrarPorCategoriaExterna === 'function') {
+        window.filtrarPorCategoriaExterna(categoria);
+      }
+      toggleMenuLateral(false);
+    }
+
+    // Controlar apertura y cierre del menú lateral
+    function toggleMenuLateral(abrir) {
+      const menu = document.getElementById('side-menu');
+      const overlay = document.getElementById('side-menu-overlay');
+      if (abrir) {
+        menu.classList.add('active');
+        overlay.classList.add('active');
+      } else {
+        menu.classList.remove('active');
+        overlay.classList.remove('active');
+      }
+    }
+
+    // Lógica integrada para procesar el pago y registrar automáticamente en el historial de SQLite
+    async function procesarPagoCheckout() {
+      const usuario = JSON.parse(localStorage.getItem('usuario'));
+      const carrito = JSON.parse(localStorage.getItem('carrito')) || [];
+
+      if (!usuario) {
+        alert('Debes iniciar sesión para realizar una compra.');
+        window.location.href = '/auth.html';
+        return;
+      }
+
+      if (carrito.length === 0) {
+        alert('Tu carrito está vacío.');
+        return;
+      }
+
+      const montoTotal = carrito.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
+
+      try {
+        // 1. Guardar el pedido en la base de datos SQLite antes de redirigir a Mercado Pago
+        await fetch('/api/pedidos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            usuario_id: usuario.id,
+            paypal_order_id: 'MP-' + Math.floor(Math.random() * 1000000),
+            monto: montoTotal,
+            items: carrito
+          })
+        });
+
+        // 2. Solicitar la preferencia de pago a Mercado Pago
+        const response = await fetch('/api/crear-preferencia', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            items: carrito,
+            usuario_id: usuario.id
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.init_point) {
+          // Limpiar el carrito local tras generar el pago
+          localStorage.removeItem('carrito');
+          // Redirigir al usuario a la pasarela de pagos
+          window.location.href = data.init_point;
+        } else {
+          alert('No se pudo generar el enlace de pago de Mercado Pago.');
+        }
+
+      } catch (error) {
+        console.error('Error procesando el pago:', error);
+        alert('Ocurrió un error al procesar tu compra.');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      cargarMenuLateralCategorias();
+
+      const btnMenu = document.getElementById('btn-menu-lateral');
+      const btnClose = document.getElementById('btn-close-side-menu');
+      const overlay = document.getElementById('side-menu-overlay');
+
+      btnMenu?.addEventListener('click', () => toggleMenuLateral(true));
+      btnClose?.addEventListener('click', () => toggleMenuLateral(false));
+      overlay?.addEventListener('click', () => toggleMenuLateral(false));
+
+      // Asignar la función de pago segura al botón de checkout
+      const btnCheckout = document.getElementById('btn-checkout');
+      if (btnCheckout) {
+        // Reemplazamos cualquier evento previo clonando o sobreescribiendo el onclick
+        btnCheckout.onclick = procesarPagoCheckout;
+      }
+    });
+  </script>
 </body>
 </html>

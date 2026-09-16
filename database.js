@@ -11,14 +11,16 @@ const db = new sqlite3.Database(dbPath, (err) => {
 });
 
 db.serialize(() => {
-  // Tabla Usuarios
+  // Tabla Usuarios (Con campos de ciudad y departamento añadidos)
   db.run(`
     CREATE TABLE IF NOT EXISTS usuarios (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       nombre TEXT NOT NULL,
       email TEXT UNIQUE NOT NULL,
       password TEXT NOT NULL,
-      rol TEXT DEFAULT 'cliente'
+      rol TEXT DEFAULT 'cliente',
+      ciudad TEXT DEFAULT '',
+      departamento TEXT DEFAULT ''
     )
   `);
 
@@ -50,11 +52,14 @@ db.serialize(() => {
     db.get(`SELECT COUNT(*) AS total FROM productos`, (err, row) => {
       if (row && row.total === 0) {
         const stmt = db.prepare(`INSERT INTO productos (nombre, precio, categoria, imagen, stock) VALUES (?, ?, ?, ?, ?)`);
-        stmt.run('Audífonos Bluetooth', 85.00, 'Audio', 'https://via.placeholder.com/150', 15);
-        stmt.run('Teclado Mecánico RGB', 150.00, 'Periféricos', 'https://via.placeholder.com/150', 8);
-        stmt.run('Mouse Gamer', 60.00, 'Periféricos', 'https://via.placeholder.com/150', 20);
-        stmt.run('Monitor 24 pulgadas', 450.00, 'Monitores', 'https://via.placeholder.com/150', 5);
-        stmt.finalize(() => console.log('✅ Productos con categoría insertados en la BD.'));
+        
+        // Productos con imágenes estables y funcionales
+        stmt.run('Audífonos Bluetooth', 85.00, 'Audio', 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300', 15);
+        stmt.run('Teclado Mecánico RGB', 150.00, 'Periféricos', 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=300', 8);
+        stmt.run('Mouse Gamer', 60.00, 'Periféricos', 'https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?w=300', 20);
+        stmt.run('Monitor 24 pulgadas', 450.00, 'Monitores', 'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=300', 5);
+        
+        stmt.finalize(() => console.log('✅ Productos con categoría e imágenes estables insertados en la BD.'));
       }
     });
   });
