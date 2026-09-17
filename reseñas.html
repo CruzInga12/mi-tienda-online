@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tus Reseñas - Mi Tienda</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        .review-form-box {
+            background: #fdfdfd;
+            border: 1px solid #e1e8ed;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #444;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+        .btn-submit {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-submit:hover {
+            background: #1d4ed8;
+        }
+        .review-card {
+            display: flex;
+            gap: 20px;
+            border: 1px solid #e1e8ed;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background: #fafbfc;
+            align-items: center;
+        }
+        .product-thumb {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 6px;
+        }
+        .review-info {
+            flex-grow: 1;
+        }
+        .review-stars {
+            color: #f39c12;
+            margin-bottom: 5px;
+        }
+        .review-media-container {
+            margin-top: 10px;
+        }
+        .review-media-container video, .review-media-container img {
+            max-width: 180px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+        .back-btn {
+            display: inline-block;
+            margin-bottom: 20px;
+            text-decoration: none;
+            color: #007bff;
+            font-weight: bold;
+        }
+        .back-btn:hover {
+            text-decoration: underline;
+        }
+        .no-reviews {
+            text-align: center;
+            color: #777;
+            padding: 40px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Volver a la tienda</a>
+        <h2><i class="fas fa-star" style="color: #f39c12;"></i> Gestión de Reseñas y Multimedia</h2>
+        
+        <!-- Formulario para agregar reseña -->
+        <div class="review-form-box">
+            <h3>Deja una reseña con foto o video</h3>
+            <form id="form-nueva-reseña" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="input-product-id">ID del Producto:</label>
+                    <input type="number" id="input-product-id" placeholder="Ej. 1" required>
+                </div>
+                <div class="form-group">
+                    <label for="input-rating">Calificación (Estrellas):</label>
+                    <select id="input-rating">
+                        <option value="5">⭐⭐⭐⭐⭐ (5/5)</option>
+                        <option value="4">⭐⭐⭐⭐ (4/5)</option>
+                        <option value="3">⭐⭐⭐ (3/5)</option>
+                        <option value="2">⭐⭐ (2/5)</option>
+                        <option value="1">⭐ (1/5)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="input-comment">Comentario:</label>
+                    <textarea id="input-comment" rows="3" placeholder="Escribe tu opinión sobre el producto..." required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="input-media"><i class="fa-solid fa-video"></i> Sube tu foto o video de prueba:</label>
+                    <input type="file" id="input-media" accept="image/*,video/*">
+                </div>
+                <button type="submit" class="btn-submit"><i class="fas fa-paper-plane"></i> Publicar Reseña</button>
+            </form>
+        </div>
+
+        <h3 style="margin-top: 30px; border-bottom: 1px solid #eee; padding-bottom: 8px;">Mis Reseñas Publicadas</h3>
+        <div id="reviews-list">
+            <p style="text-align: center; color: #777;">Cargando tus reseñas...</p>
+        </div>
+    </div>
+
+    <script>
+        // Función para cargar y mostrar las reseñas del usuario
+        async function cargarReseñas() {
+            const usuarioGuardado = JSON.parse(localStorage.getItem('usuario')) || {};
+            const usuarioId = usuarioGuardado.id || 1; 
+            const container = document.getElementById('reviews-list');
+
+            try {
+                const response = await fetch(`/api/reviews/user/${usuarioId}`);
+                const reviews = await response.json();
+
+                if (!reviews || reviews.length === 0) {
+                    container.innerHTML = `<div class="no-reviews"><p>Aún no has escrito ninguna reseña ni subido videos de tus productos.</p></div>`;
+                    return;
+                }
+
+                container.innerHTML = ''; 
+
+                reviews.forEach(review => {
+                    const estrellas = '⭐'.repeat(review.rating || 5);
+                    let mediaHtml = '';
+                    
+                    if (review.media_url) {
+                        const esVideo = review.media_url.match(/\.(mp4|webm|ogg|mov)$/i);
+                        if (esVideo) {
+                            mediaHtml = `
+                                <div class="review-media-container">
+                                    <video width="160" controls>
+                                        <source src="${review.media_url}" type="video/mp4">
+                                        Tu navegador no soporta la reproducción de videos.
+                                    </video>
+                                </div>`;
+                        } else {
+                            mediaHtml = `
+                                <div class="review-media-container">
+                                    <img src="${review.media_url}" alt="Foto del producto" class="product-thumb">
+                                </div>`;
+                        }
+                    }
+
+                    const card = document.createElement('div');
+                    card.className = 'review-card';
+                    card.innerHTML = `
+                        <img src="${review.producto_imagen || 'https://picsum.photos/150'}" alt="Producto" class="product-thumb">
+                        <div class="review-info">
+                            <strong>${review.producto_nombre || 'Producto de la tienda'}</strong>
+                            <div class="review-stars">${estrellas}</div>
+                            <p style="margin: 5px 0; color: #444;">${review.comment}</p>
+                            <small style="color: #888;">Fecha: ${new Date(review.created_at).toLocaleDateString()}</small>
+                            ${mediaHtml}
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+
+            } catch (error) {
+                console.error('Error al cargar reseñas:', error);
+                container.innerHTML = `<p style="color: red; text-align: center;">Error al cargar las reseñas desde el servidor.</p>`;
+            }
+        }
+
+        // Evento cuando carga la página
+        document.addEventListener('DOMContentLoaded', () => {
+            cargarReseñas();
+
+            // Lógica para enviar el formulario con fotos o videos
+            const formNuevaReseña = document.getElementById('form-nueva-reseña');
+            formNuevaReseña.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const usuarioGuardado = JSON.parse(localStorage.getItem('usuario')) || {};
+                const usuarioId = usuarioGuardado.id || 1;
+                const userEmail = usuarioGuardado.email || 'cruz@example.com';
+
+                const productId = document.getElementById('input-product-id').value;
+                const rating = document.getElementById('input-rating').value;
+                const comment = document.getElementById('input-comment').value;
+                const mediaFile = document.getElementById('input-media').files[0];
+
+                const formData = new FormData();
+                formData.append('usuario_id', usuarioId);
+                formData.append('user_email', userEmail);
+                formData.append('product_id', productId);
+                formData.append('rating', rating);
+                formData.append('comment', comment);
+
+                if (mediaFile) {
+                    formData.append('media', mediaFile); // Envía el video o foto hacia multer en el servidor
+                }
+
+                try {
+                    const response = await fetch('/api/reviews', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const resultado = await response.json();
+
+                    if (response.ok) {
+                        alert('¡Reseña y archivo multimedia publicados con éxito!');
+                        formNuevaReseña.reset();
+                        cargarReseñas(); // Actualizar la lista automáticamente en pantalla
+                    } else {
+                        alert('Error: ' + (resultado.error || 'No se pudo guardar la reseña'));
+                    }
+                } catch (error) {
+                    console.error('Error al enviar la reseña:', error);
+                    alert('Hubo un error de conexión con el servidor.');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

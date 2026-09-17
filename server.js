@@ -3,6 +3,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 const multer = require('multer'); // <- 1. Importado para manejar subida de archivos
 const db = require('./database'); // Importa la conexión SQLite proporcionada
 const { MercadoPagoConfig, Preference } = require('mercadopago');
@@ -10,10 +11,16 @@ const { MercadoPagoConfig, Preference } = require('mercadopago');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Configuración de Multer para guardar imágenes en la carpeta 'uploads'
+// Asegurar que exista la carpeta 'uploads' físicamente
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// Configuración de Multer para guardar imágenes y videos en la carpeta 'uploads'
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, __dirname + '/uploads'); // Carpeta física de destino
+    cb(null, uploadDir); // Carpeta física de destino
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -32,11 +39,79 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); // Permite leer formularios HTML clásicos
 app.use(express.static(__dirname)); // Sirve archivos estáticos
-app.use('/uploads', express.static(path.join(__dirname, 'uploads'))); // <- 2. Hace pública la carpeta de imágenes locales
+app.use('/uploads', express.static(uploadDir)); // Hace pública la carpeta local
 
 // ==========================================
-// RUTAS DE LA API
+// INICIALIZACIÓN DE TABLAS EN LA BASE DE DATOS
 // ==========================================
+db.serialize(() => {
+  // Tabla de Usuarios
+  db.run(`CREATE TABLE IF NOT EXISTS usuarios (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre TEXT,
+    email TEXT UNIQUE,
+    password TEXT,
+    rol TEXT DEFAULT 'cliente',
+    ciudad TEXT,
+    departamento TEXT
+  )`, (err) => {
+    if (err) console.error('Error al crear tabla usuarios:', err);
+    else console.log('👤 Tabla de usuarios verificada/creada correctamente.');
+  });
+
+  // Tabla de Productos
+  db.run(`CREATE TABLE IF NOT EXISTS productos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre TEXT,
+    precio REAL,
+    stock INTEGER,
+    categoria TEXT,
+    imagen TEXT
+  )`, (err) => {
+    if (err) console.error('Error al crear tabla productos:', err);
+    else console.log('🛍️ Tabla de productos verificada/creada correctamente.');
+  });
+
+  // Tabla de Pedidos
+  db.run(`CREATE TABLE IF NOT EXISTS pedidos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    usuario_id INTEGER,
+    paypal_order_id TEXT,
+    monto REAL,
+    items TEXT,
+    fecha DATETIME DEFAULT CURRENT_TIMESTAMP
+  )`, (err) => {
+    if (err) console.error('Error al crear tabla pedidos:', err);
+    else console.log('📦 Tabla de pedidos verificada/creada correctamente.');
+  });
+
+  // Tabla de Reseñas
+  db.run(`CREATE TABLE IF NOT EXISTS reviews (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    usuario_id INTEGER,
+    user_email TEXT,
+    product_id INTEGER,
+    rating INTEGER,
+    comment TEXT,
+    media_url TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )`, (err) => {
+    if (err) {
+      console.error('Error al crear la tabla de reseñas:', err);
+    } else {
+      console.log('⭐ Tabla de reseñas verificada/creada correctamente.');
+    }
+  });
+});
+
+// ==========================================
+// RUTAS DE LA API Y VISTAS HTML
+// ==========================================
+
+// Ruta explícita para el detalle del producto (Soluciona el error Cannot GET /producto.html)
+app.get('/producto.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'producto.html'));
+});
 
 // 1. Obtener catálogo de productos
 app.get(['/api/productos', '/api/admin/productos'], (req, res) => {
@@ -48,11 +123,8 @@ app.get(['/api/productos', '/api/admin/productos'], (req, res) => {
   });
 });
 
-// 1.1. Crear / Guardar un nuevo producto (Actualizado con upload.single para recibir archivos)
+// 1.1. Crear / Guardar un nuevo producto
 app.post(['/api/productos', '/api/admin/productos'], upload.single('imagen'), (req, res) => {
-  console.log('Datos recibidos en el servidor:', req.body);
-  console.log('Archivo de imagen recibido:', req.file);
-
   const body = req.body || {};
   
   const nombre = body.nombre || body.name || body.titulo || body.productName || 'Producto sin nombre';
@@ -60,7 +132,6 @@ app.post(['/api/productos', '/api/admin/productos'], upload.single('imagen'), (r
   const stock = body.stock || body.cantidad || body.quantity || 0;
   const categoria = body.categoria || body.category || 'General';
 
-  // Si adjuntó archivo desde la PC usa esa ruta local, de lo contrario revisa si mandó texto o usa una por defecto
   const imagen = req.file 
     ? `/uploads/${req.file.filename}` 
     : (body.imagen || body.image || 'https://picsum.photos/150');
@@ -98,8 +169,8 @@ app.delete(['/api/productos/:id', '/api/admin/productos/:id'], (req, res) => {
   });
 });
 
-// 1.3. Obtener un solo producto por ID (Para rellenar el modal de edición)
-app.get(['/api/productos/:id', '/api/admin/productos/:id'], (req, res) => {
+// 1.3. Obtener un solo producto por ID
+app.get(['/api/productos/:id', '/api/admin/productos/:id', '/api/products/:id'], (req, res) => {
   const { id } = req.params;
   db.get('SELECT * FROM productos WHERE id = ?', [id], (err, row) => {
     if (err || !row) {
@@ -109,7 +180,7 @@ app.get(['/api/productos/:id', '/api/admin/productos/:id'], (req, res) => {
   });
 });
 
-// 1.4. Actualizar un producto existente (Actualizado con upload.single para permitir cambiar la foto localmente)
+// 1.4. Actualizar un producto existente
 app.put(['/api/productos/:id', '/api/admin/productos/:id'], upload.single('imagen'), (req, res) => {
   const { id } = req.params;
   const body = req.body || {};
@@ -119,7 +190,6 @@ app.put(['/api/productos/:id', '/api/admin/productos/:id'], upload.single('image
   const stock = body.stock || body.quantity;
   const categoria = body.categoria || body.category || 'General';
 
-  // Determinamos si subió un archivo nuevo o si mandó un texto de imagen, o si conserva la anterior
   let imagenNueva = null;
   if (req.file) {
     imagenNueva = `/uploads/${req.file.filename}`;
@@ -142,7 +212,7 @@ app.put(['/api/productos/:id', '/api/admin/productos/:id'], upload.single('image
   });
 });
 
-// 1.5. Obtener la lista de categorías únicas para la tienda
+// 1.5. Obtener la lista de categorías únicas
 app.get(['/api/categorias', '/api/admin/categorias'], (req, res) => {
   db.all('SELECT DISTINCT categoria FROM productos WHERE categoria IS NOT NULL AND categoria != ""', [], (err, rows) => {
     if (err) {
@@ -212,7 +282,7 @@ app.put('/api/actualizar-perfil', (req, res) => {
   });
 });
 
-// 3.2. Actualizar contraseña de usuario (AÑADIDO POR SEGURIDAD)
+// 3.2. Actualizar contraseña de usuario
 app.put('/api/actualizar-password', (req, res) => {
   const { id, passwordActual, passwordNueva } = req.body;
 
@@ -246,9 +316,9 @@ app.post('/api/crear-preferencia', async (req, res) => {
 
     const mpItems = items.map(item => ({
       id: String(item.id),
-      title: String(item.nombre),
-      quantity: Number(item.cantidad),
-      unit_price: Number(item.precio),
+      title: String(item.nombre || item.title || 'Producto'),
+      quantity: Number(item.cantidad || item.quantity || 1),
+      unit_price: Number(item.precio || item.price || 0),
       currency_id: 'PEN'
     }));
 
@@ -280,6 +350,7 @@ app.post('/api/crear-preferencia', async (req, res) => {
     res.status(500).json({ error: error.message || 'No se pudo generar la pasarela de pago' });
   }
 });
+
 // 5. Obtener historial de pedidos de un usuario
 app.get(['/api/pedidos/:usuario_id', '/api/admin/pedidos/:usuario_id', '/api/admin/pedidos'], (req, res) => {
   const { usuario_id } = req.params;
@@ -330,6 +401,55 @@ app.post(['/api/pedidos', '/api/admin/pedidos'], (req, res) => {
       return res.status(500).json({ error: 'Error al registrar el pedido' });
     }
     res.status(201).json({ mensaje: 'Pedido registrado correctamente', pedidoId: this.lastID });
+  });
+});
+
+// ==========================================
+// RUTAS DE RESEÑAS Y VIDEOS
+// ==========================================
+
+// 7. Crear una reseña con foto o video opcional
+app.post('/api/reviews', upload.single('media'), (req, res) => {
+  const { usuario_id, user_email, product_id, rating, comment } = req.body;
+  const media_url = req.file ? `/uploads/${req.file.filename}` : null;
+
+  const query = `INSERT INTO reviews (usuario_id, user_email, product_id, rating, comment, media_url) VALUES (?, ?, ?, ?, ?, ?)`;
+  const params = [usuario_id || 1, user_email || 'Anónimo', product_id, rating || 5, comment || '', media_url];
+
+  db.run(query, params, function (err) {
+    if (err) {
+      console.error('Error al guardar reseña:', err);
+      return res.status(500).json({ error: 'Error al guardar la reseña' });
+    }
+    res.status(201).json({ mensaje: 'Reseña agregada con éxito', reviewId: this.lastID, media_url });
+  });
+});
+
+// 8. Obtener reseñas de un producto específico
+app.get('/api/reviews/product/:product_id', (req, res) => {
+  const { product_id } = req.params;
+  db.all('SELECT * FROM reviews WHERE product_id = ? ORDER BY created_at DESC', [product_id], (err, rows) => {
+    if (err) {
+      return res.status(500).json({ error: 'Error al obtener reseñas' });
+    }
+    res.json(rows);
+  });
+});
+
+// 9. Obtener las reseñas hechas por un usuario (Para la sección "Tus reseñas")
+app.get('/api/reviews/user/:usuario_id', (req, res) => {
+  const { usuario_id } = req.params;
+  db.all(`
+    SELECT reviews.*, productos.nombre AS producto_nombre, productos.imagen AS producto_imagen 
+    FROM reviews 
+    LEFT JOIN productos ON reviews.product_id = productos.id 
+    WHERE reviews.usuario_id = ? 
+    ORDER BY reviews.created_at DESC
+  `, [usuario_id], (err, rows) => {
+    if (err) {
+      return res.status(500).json({ error: 'Error al obtener las reseñas del usuario' });
+    }
+    res.json(rows);
   });
 });
 

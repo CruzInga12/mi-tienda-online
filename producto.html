@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle del Producto - Mi Tienda</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .back-btn {
+            display: inline-block;
+            margin-bottom: 20px;
+            text-decoration: none;
+            color: #007bff;
+            font-weight: bold;
+        }
+        .back-btn:hover {
+            text-decoration: underline;
+        }
+        .product-header {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 40px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        .product-img {
+            width: 300px;
+            height: 300px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        .product-details {
+            flex: 1;
+            min-width: 280px;
+        }
+        .product-details h1 {
+            margin-top: 0;
+            color: #333;
+        }
+        .price {
+            font-size: 24px;
+            color: #2563eb;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+        .actions-box {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .quantity-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .quantity-group input {
+            width: 60px;
+            padding: 8px;
+            text-align: center;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+        .btn-cart {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-cart:hover {
+            background: #059669;
+        }
+        .product-reviews-section {
+            margin-top: 30px;
+        }
+        .add-review-box {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #444;
+        }
+        .form-group select, .form-group textarea, .form-group input[type="file"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+        .btn-submit {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-submit:hover {
+            background: #1d4ed8;
+        }
+        .review-item {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Volver a la tienda</a>
+
+        <!-- Información general del producto -->
+        <div class="product-header">
+            <img id="product-image" src="https://picsum.photos/300" alt="Imagen del producto" class="product-img">
+            <div class="product-details">
+                <h1 id="product-name">Cargando producto...</h1>
+                <p class="price" id="product-price">$0.00</p>
+                <p id="product-description" style="color: #666; line-height: 1.5;">Cargando descripción...</p>
+                <p id="product-stock" style="color: #555; font-size: 14px; font-weight: bold;"></p>
+
+                <!-- Controles para el Carrito -->
+                <div class="actions-box">
+                    <div class="quantity-group">
+                        <label for="product-quantity">Cantidad:</label>
+                        <input type="number" id="product-quantity" value="1" min="1" max="100">
+                    </div>
+                    <button type="button" id="btn-add-to-cart" class="btn-cart">
+                        <i class="fas fa-cart-plus"></i> Agregar al Carrito
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección de Reseñas y Multimedia -->
+        <div class="product-reviews-section">
+            <h3>Opiniones y Videos de Clientes</h3>
+            
+            <!-- Formulario para dejar reseña con video/foto -->
+            <div class="add-review-box">
+                <h4>Deja tu reseña con foto o video</h4>
+                <form id="form-enviar-reseña" enctype="multipart/form-data">
+                    <input type="hidden" id="review-product-id" value="1"> 
+                    
+                    <div class="form-group">
+                        <label for="review-rating">Calificación:</label>
+                        <select id="review-rating">
+                            <option value="5">⭐⭐⭐⭐⭐ (5/5)</option>
+                            <option value="4">⭐⭐⭐⭐ (4/5)</option>
+                            <option value="3">⭐⭐⭐ (3/5)</option>
+                            <option value="2">⭐⭐ (2/5)</option>
+                            <option value="1">⭐ (1/5)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="review-comment">Comentario:</label>
+                        <textarea id="review-comment" rows="3" placeholder="¿Qué te pareció el producto?" required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="review-media"><i class="fa-solid fa-video"></i> Sube un video o foto corta:</label>
+                        <input type="file" id="review-media" accept="image/*,video/*">
+                    </div>
+
+                    <button type="submit" class="btn-submit">
+                        <i class="fas fa-paper-plane"></i> Publicar Reseña
+                    </button>
+                </form>
+            </div>
+
+            <!-- Contenedor donde se cargarán las opiniones -->
+            <div id="lista-reseñas-producto">
+                <p style="color: #666;">Cargando reseñas...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let productoActual = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const productId = urlParams.get('id') || 1; 
+
+            const inputProdId = document.getElementById('review-product-id');
+            if (inputProdId) inputProdId.value = productId;
+
+            cargarDatosProducto(productId);
+            cargarReseñasDelProducto(productId);
+
+            // Manejar lógica del botón de agregar al carrito
+            const btnAddToCart = document.getElementById('btn-add-to-cart');
+            if (btnAddToCart) {
+                btnAddToCart.addEventListener('click', () => {
+                    if (!productoActual) {
+                        alert('El producto aún no se ha cargado por completo.');
+                        return;
+                    }
+
+                    const cantidadSeleccionada = parseInt(document.getElementById('product-quantity').value) || 1;
+                    
+                    let carrito = JSON.parse(localStorage.getItem('carrito')) || [];
+                    const prodIdReal = productoActual.id || productId;
+                    const index = carrito.findIndex(item => item.id == prodIdReal);
+
+                    const nombreProd = productoActual.nombre || productoActual.name || 'Producto sin nombre';
+                    const precioProd = productoActual.precio !== undefined ? productoActual.precio : (productoActual.price || 0);
+                    const imagenProd = productoActual.imagen || productoActual.image || '';
+
+                    if (index > -1) {
+                        carrito[index].cantidad += cantidadSeleccionada;
+                    } else {
+                        carrito.push({
+                            id: prodIdReal,
+                            name: nombreProd,
+                            price: precioProd,
+                            image: imagenProd,
+                            cantidad: cantidadSeleccionada
+                        });
+                    }
+
+                    localStorage.setItem('carrito', JSON.stringify(carrito));
+                    alert(`¡Se agregaron ${cantidadSeleccionada} unidad(es) al carrito correctamente!`);
+                });
+            }
+
+            // Manejar envío de reseñas
+            const formReseña = document.getElementById('form-enviar-reseña');
+            if (formReseña) {
+                formReseña.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+
+                    const usuario = JSON.parse(localStorage.getItem('usuario')) || {};
+                    const usuarioId = usuario.id || 1;
+                    const userEmail = usuario.email || 'cliente@example.com';
+
+                    const rating = document.getElementById('review-rating').value;
+                    const comment = document.getElementById('review-comment').value;
+                    const mediaFile = document.getElementById('review-media').files[0];
+
+                    const formData = new FormData();
+                    formData.append('usuario_id', usuarioId);
+                    formData.append('user_email', userEmail);
+                    formData.append('product_id', productId);
+                    formData.append('rating', rating);
+                    formData.append('comment', comment);
+                    
+                    if (mediaFile) {
+                        formData.append('media', mediaFile);
+                    }
+
+                    try {
+                        const response = await fetch('/api/reviews', {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        const resultado = await response.json();
+
+                        if (response.ok) {
+                            alert('¡Reseña publicada con éxito!');
+                            formReseña.reset();
+                            cargarReseñasDelProducto(productId);
+                        } else {
+                            alert('Error: ' + (resultado.error || 'No se pudo guardar la reseña'));
+                        }
+                    } catch (error) {
+                        console.error('Error al enviar reseña:', error);
+                        alert('Ocurrió un error al conectar con el servidor.');
+                    }
+                });
+            }
+        });
+
+        async function cargarDatosProducto(id) {
+            try {
+                const res = await fetch(`/api/products/${id}`);
+                if (!res.ok) throw new Error('No se pudo cargar el producto');
+                
+                productoActual = await res.json();
+                
+                // Mapeo flexible para propiedades en español o inglés
+                const nombreProd = productoActual.nombre || productoActual.name || 'Producto sin nombre';
+                const precioProd = productoActual.precio !== undefined ? productoActual.precio : (productoActual.price || 0);
+                const descProd = productoActual.descripcion || productoActual.description || 'Sin descripción disponible.';
+                const stockProd = productoActual.stock !== undefined ? productoActual.stock : 0;
+                const imagenProd = productoActual.imagen || productoActual.image;
+
+                document.getElementById('product-name').textContent = nombreProd;
+                document.getElementById('product-price').textContent = `$${Number(precioProd).toFixed(2)}`;
+                document.getElementById('product-description').textContent = descProd;
+                document.getElementById('product-stock').textContent = `Stock disponible: ${stockProd} unidades`;
+
+                if (imagenProd) {
+                    document.getElementById('product-image').src = imagenProd;
+                }
+            } catch (err) {
+                console.warn('Error al conectar con la API de productos:', err);
+                document.getElementById('product-name').textContent = 'Error al cargar producto';
+            }
+        }
+
+        async function cargarReseñasDelProducto(productId) {
+            const contenedor = document.getElementById('lista-reseñas-producto');
+            try {
+                const res = await fetch(`/api/reviews/product/${productId}`);
+                const reviews = await res.json();
+
+                if (!reviews || reviews.length === 0) {
+                    contenedor.innerHTML = '<p style="color: #666; text-align: center; padding: 20px;">Aún no hay reseñas para este producto. ¡Sé el primero en opinar y subir tu video!</p>';
+                    return;
+                }
+
+                contenedor.innerHTML = '';
+                reviews.forEach(r => {
+                    let mediaTag = '';
+                    if (r.media_url) {
+                        const esVideo = r.media_url.match(/\.(mp4|webm|ogg|mov)$/i);
+                        if (esVideo) {
+                            mediaTag = `
+                                <div style="margin-top: 10px;">
+                                    <video width="220" controls style="border-radius: 6px; border: 1px solid #ccc;">
+                                        <source src="${r.media_url}" type="video/mp4">
+                                        Tu navegador no soporta videos.
+                                    </video>
+                                </div>`;
+                        } else {
+                            mediaTag = `
+                                <div style="margin-top: 10px;">
+                                    <img src="${r.media_url}" width="160" style="border-radius: 6px; border: 1px solid #ccc; display: block;">
+                                </div>`;
+                        }
+                    }
+
+                    contenedor.innerHTML += `
+                        <div class="review-item">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <strong>${r.user_email || 'Usuario'}</strong>
+                                <span style="color: #f59e0b;">${'⭐'.repeat(r.rating || 5)}</span>
+                            </div>
+                            <p style="margin: 8px 0; color: #444;">${r.comment}</p>
+                            <small style="color: #9ca3af;">${new Date(r.created_at).toLocaleDateString()}</small>
+                            ${mediaTag}
+                        </div>
+                    `;
+                });
+            } catch (err) {
+                console.error('Error cargando reseñas:', err);
+                contenedor.innerHTML = '<p style="color: red;">Error al cargar las opiniones del servidor.</p>';
+            }
+        }
+    </script>
+</body>
+</html>

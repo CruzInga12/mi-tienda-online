@@ -358,10 +358,9 @@ button:hover {
 }
 
 /* ==========================================
-   ESTILOS DEL MENÚ LATERAL (ESTILO OECHSLE)
-   ========================================== */
+    ESTILOS DEL MENÚ LATERAL (ESTILO OECHSLE)
+    ========================================== */
 
-/* Fondo oscuro translúcido detrás del menú */
 .side-menu-overlay {
   position: fixed;
   top: 0;
@@ -380,11 +379,10 @@ button:hover {
   opacity: 1;
 }
 
-/* Contenedor principal del menú lateral deslizante */
 .side-menu {
   position: fixed;
   top: 0;
-  left: -300px; /* Oculto inicialmente fuera de la pantalla a la izquierda */
+  left: -300px;
   width: 300px;
   height: 100%;
   background-color: #ffffff;
@@ -395,12 +393,10 @@ button:hover {
   flex-direction: column;
 }
 
-/* Clase que activa la apertura del menú */
 .side-menu.active {
   left: 0;
 }
 
-/* Cabecera interna del menú (Categorías y botón de cerrar) */
 .side-menu-header {
   display: flex;
   justify-content: space-between;
@@ -430,7 +426,6 @@ button:hover {
   color: #dc2626;
 }
 
-/* Lista de categorías dentro del menú */
 .side-category-list {
   list-style: none;
   padding: 0;
@@ -463,8 +458,8 @@ button:hover {
 }
 
 /* ==========================================
-   MENÚ FLOTANTE DE USUARIO (HOVER)
-   ========================================== */
+    MENÚ FLOTANTE DE USUARIO (HOVER)
+    ========================================== */
 .user-menu-container {
   position: relative;
   display: inline-block;
@@ -488,7 +483,7 @@ button:hover {
 .user-avatar-circle {
   width: 30px;
   height: 30px;
-  background-color: #854d0e; /* Color base elegante */
+  background-color: #854d0e;
   color: white;
   border-radius: 50%;
   display: flex;
@@ -526,7 +521,6 @@ button:hover {
   white-space: nowrap;
 }
 
-/* El panel flotante oculta por defecto */
 .user-dropdown-panel {
   position: absolute;
   top: 100%;
@@ -544,7 +538,6 @@ button:hover {
   border: 1px solid #e5e7eb;
 }
 
-/* Se muestra al poner el mouse encima del contenedor */
 .user-menu-container:hover .user-dropdown-panel {
   opacity: 1;
   visibility: visible;
@@ -599,4 +592,46 @@ button:hover {
 .dropdown-logout-btn:hover {
   background-color: #fee2e2 !important;
   color: #b91c1c !important;
+}
+
+/* ==========================================
+    ADAPTABILIDAD MÓVIL (RESPONSIVE)
+    ========================================== */
+@media (max-width: 768px) {
+  /* Cuadrícula de productos a una sola columna */
+  .product-grid, .productos-grid, .grid-container {
+    grid-template-columns: 1fr !important;
+    padding: 10px;
+    gap: 1rem;
+  }
+
+  /* Encabezado adaptable */
+  .header-container {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 8px 10px;
+  }
+
+  /* Buscador en su propia línea en celulares */
+  .search-bar {
+    order: 3;
+    width: 100%;
+    margin-top: 5px;
+  }
+
+  /* Ocultar ubicación para ganar espacio en pantallas muy chicas */
+  .location-picker {
+    display: none;
+  }
+
+  /* Títulos más pequeños */
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  /* Modal del carrito ocupando toda la pantalla */
+  .cart-modal {
+    width: 100% !important;
+    max-width: 100%;
+  }
 }

@@ -16,7 +16,7 @@
       
       <!-- Menú Hamburguesa / Categorías -->
       <div class="menu-category-wrapper">
-        <button id="btn-menu-lateral" class="menu-toggle">
+        <button id="btn-menu-lateral" class="menu-toggle" aria-label="Abrir menú de categorías">
           <i class="fa-solid fa-bars"></i>
         </button>
       </div>
@@ -65,7 +65,7 @@
             <ul class="dropdown-menu-list">
               <li><a href="/perfil.html"><i class="fa-solid fa-user"></i> Tu perfil</a></li>
               <li><a href="/historial.html"><i class="fa-solid fa-clipboard-list"></i> Tus pedidos</a></li>
-              <li><a href="#" onclick="alert('Próximamente: Reseñas')"><i class="fa-regular fa-star"></i> Tus reseñas</a></li>
+              <li><a href="reseñas.html"><i class="fa-solid fa-star"></i> Tus reseñas</a></li>
               <li><a href="#" onclick="alert('Próximamente: Cupones')"><i class="fa-solid fa-ticket"></i> Cupones y ofertas</a></li>
               <li><a href="#" onclick="alert('Próximamente: Direcciones')"><i class="fa-solid fa-location-dot"></i> Direcciones de envío</a></li>
               <li><hr style="border: none; border-top: 1px solid #f0f0f0; margin: 5px 0;"></li>
@@ -93,7 +93,7 @@
     </div>
   </header>
 
-  <!-- MENÚ LATERAL DE CATEGORÍAS (Estilo Oechsle) -->
+  <!-- MENÚ LATERAL DE CATEGORÍAS -->
   <div id="side-menu-overlay" class="side-menu-overlay"></div>
   <nav id="side-menu" class="side-menu">
     <div class="side-menu-header">
@@ -110,7 +110,7 @@
 
     <!-- Catálogo de Productos -->
     <section class="products-section">
-      <h2 style="margin-bottom: 20px; font-size: 24px; color: #1f2937;">Productos Disponibles</h2>
+      <h2 style="margin-bottom: 20px; font-size: 24px; color: #1f2937;" id="titulo-seccion-catalogo">Productos Disponibles</h2>
       <div id="product-list" class="product-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px;"></div>
     </section>
 
@@ -131,8 +131,218 @@
 
   </main>
 
-  <script src="app.js"></script>
+  <!-- Script global de la tienda (Manejo de sesión, catálogo, carrito y enlaces a producto.html) -->
   <script>
+    // Variables globales para la tienda
+    let todosLosProductos = [];
+    let categoriaActualSeleccionada = 'Todas';
+
+    // 1. Verificar sesión de usuario al cargar la página
+    function verificarSesionUsuario() {
+      const usuarioStr = localStorage.getItem('usuario');
+      const userMenuWrapper = document.getElementById('user-menu-wrapper');
+      const btnLoginLink = document.getElementById('btn-login-link');
+
+      if (usuarioStr) {
+        try {
+          const usuario = JSON.parse(usuarioStr);
+          if (userMenuWrapper) userMenuWrapper.style.display = 'block';
+          if (btnLoginLink) btnLoginLink.style.display = 'none';
+
+          const inicial = usuario.nombre ? usuario.nombre.charAt(0).toUpperCase() : 'C';
+          const elInicial = document.getElementById('user-initial');
+          const elInicialLarge = document.getElementById('user-initial-large');
+          const elDisplayName = document.getElementById('user-display-name');
+          const elDropdownUsername = document.getElementById('dropdown-username');
+          const elDropdownEmail = document.getElementById('dropdown-email');
+
+          if (elInicial) elInicial.textContent = inicial;
+          if (elInicialLarge) elInicialLarge.textContent = inicial;
+          if (elDisplayName) elDisplayName.textContent = usuario.nombre || 'Mi Cuenta';
+          if (elDropdownUsername) elDropdownUsername.textContent = usuario.nombre || 'Usuario';
+          if (elDropdownEmail) elDropdownEmail.textContent = usuario.email || '';
+        } catch (e) {
+          console.error('Error al parsear datos de usuario:', e);
+        }
+      } else {
+        if (userMenuWrapper) userMenuWrapper.style.display = 'none';
+        if (btnLoginLink) {
+          btnLoginLink.style.display = 'flex';
+        }
+      }
+
+      // Configurar botón de cerrar sesión
+      const btnLogout = document.getElementById('btn-logout-dropdown');
+      if (btnLogout) {
+        btnLogout.onclick = () => {
+          localStorage.removeItem('usuario');
+          localStorage.removeItem('carrito');
+          window.location.reload();
+        };
+      }
+    }
+
+    // 2. Cargar productos desde la base de datos
+    async function cargarProductosTienda() {
+      try {
+        const res = await fetch('/api/productos');
+        todosLosProductos = await res.json();
+        renderizarProductos(todosLosProductos);
+      } catch (error) {
+        console.error('Error al cargar productos:', error);
+        document.getElementById('product-list').innerHTML = '<p style="color: red;">Error al conectar con el servidor.</p>';
+      }
+    }
+
+    // 3. Renderizar cuadrícula de productos (conectado a producto.html por ID)
+    function renderizarProductos(productos) {
+      const contenedor = document.getElementById('product-list');
+      if (!contenedor) return;
+
+      if (!productos || productos.length === 0) {
+        contenedor.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #666; padding: 30px;">No hay productos disponibles en esta categoría.</p>';
+        return;
+      }
+
+      contenedor.innerHTML = '';
+      productos.forEach(p => {
+        const prodId = p.id;
+        const nombre = p.nombre || p.name || 'Producto';
+        const precio = Number(p.precio || p.price || 0).toFixed(2);
+        const imagen = p.imagen || 'https://picsum.photos/200';
+
+        contenedor.innerHTML += `
+          <div class="product-card" style="background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+            <div>
+              <img src="${imagen}" alt="${nombre}" style="width: 100%; height: 160px; object-fit: cover; border-radius: 6px; margin-bottom: 10px;">
+              <h3 style="font-size: 16px; margin: 0 0 8px 0; color: #1f2937; height: 40px; overflow: hidden;">${nombre}</h3>
+              <p style="font-size: 18px; font-weight: bold; color: #2563eb; margin: 0 0 15px 0;">S/ ${precio}</p>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <a href="producto.html?id=${prodId}" style="text-align: center; background: #f3f4f6; color: #374151; padding: 8px; border-radius: 4px; text-decoration: none; font-size: 14px; font-weight: 500;">Ver Detalle</a>
+              <button onclick='agregarAlCarrito(${JSON.stringify(p)})' style="background: #2563eb; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: 500;">Agregar al Carrito</button>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    // 4. Filtrar productos por categoría externa (desde el menú lateral)
+    window.filtrarPorCategoriaExterna = function(categoria) {
+      categoriaActualSeleccionada = categoria;
+      const tituloSeccion = document.getElementById('titulo-seccion-catalogo');
+      
+      if (categoria === 'Todas') {
+        if (tituloSeccion) tituloSeccion.textContent = 'Productos Disponibles';
+        renderizarProductos(todosLosProductos);
+      } else {
+        if (tituloSeccion) tituloSeccion.textContent = `Categoría: ${categoria}`;
+        const filtrados = todosLosProductos.filter(p => p.categoria === categoria);
+        renderizarProductos(filtrados);
+      }
+    };
+
+    // 5. Sistema básico de Carrito Local
+    function obtenerCarritoLocal() {
+      return JSON.parse(localStorage.getItem('carrito')) || [];
+    }
+
+    function guardarCarritoLocal(carrito) {
+      localStorage.setItem('carrito', JSON.stringify(carrito));
+      actualizarContadorCarrito();
+    }
+
+    window.agregarAlCarrito = function(producto) {
+      let carrito = obtenerCarritoLocal();
+      const prodId = producto.id;
+      const index = carrito.findIndex(item => item.id === prodId);
+
+      if (index > -1) {
+        carrito[index].cantidad += 1;
+      } else {
+        carrito.push({
+          id: prodId,
+          nombre: producto.nombre || producto.name,
+          precio: Number(producto.precio || producto.price || 0),
+          cantidad: 1,
+          imagen: producto.imagen
+        });
+      }
+
+      guardarCarritoLocal(carrito);
+      alert('¡Producto agregado al carrito!');
+    };
+
+    function actualizarContadorCarrito() {
+      const carrito = obtenerCarritoLocal();
+      const totalItems = carrito.reduce((sum, item) => sum + item.cantidad, 0);
+      const badge = document.getElementById('cart-count');
+      if (badge) badge.textContent = totalItems;
+    }
+
+    function renderizarModalCarrito() {
+      const carrito = obtenerCarritoLocal();
+      const contenedorItems = document.getElementById('cart-items');
+      const contenedorTotal = document.getElementById('cart-total-price');
+
+      if (!contenedorItems) return;
+
+      if (carrito.length === 0) {
+        contenedorItems.innerHTML = '<p style="color: #666; text-align: center; padding: 20px;">Tu carrito está vacío.</p>';
+        if (contenedorTotal) contenedorTotal.textContent = '0.00';
+        return;
+      }
+
+      let html = '';
+      let total = 0;
+
+      carrito.forEach((item, idx) => {
+        const subtotal = item.precio * item.cantidad;
+        total += subtotal;
+        html += `
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 8px;">
+            <div>
+              <h4 style="margin: 0; font-size: 14px;">${item.nombre}</h4>
+              <small style="color: #666;">S/ ${item.precio.toFixed(2)} x ${item.cantidad}</small>
+            </div>
+            <div>
+              <button onclick="cambiarCantidadCarrito(${idx}, 1)" style="padding: 2px 6px; cursor: pointer;">+</button>
+              <button onclick="cambiarCantidadCarrito(${idx}, -1)" style="padding: 2px 6px; cursor: pointer;">-</button>
+            </div>
+          </div>
+        `;
+      });
+
+      contenedorItems.innerHTML = html;
+      if (contenedorTotal) contenedorTotal.textContent = total.toFixed(2);
+    }
+
+    window.cambiarCantidadCarrito = function(index, delta) {
+      let carrito = obtenerCarritoLocal();
+      carrito[index].cantidad += delta;
+      if (carrito[index].cantidad <= 0) {
+        carrito.splice(index, 1);
+      }
+      guardarCarritoLocal(carrito);
+      renderizarModalCarrito();
+    };
+
+    // 6. Lógica de Búsqueda en tiempo real
+    function configurarBuscador() {
+      const inputBuscar = document.getElementById('input-buscar');
+      if (!inputBuscar) return;
+
+      inputBuscar.addEventListener('input', (e) => {
+        const termino = e.target.value.toLowerCase().trim();
+        const filtrados = todosLosProductos.filter(p => {
+          const nombre = (p.nombre || p.name || '').toLowerCase();
+          const categoria = (p.categoria || '').toLowerCase();
+          return nombre.includes(termino) || categoria.includes(termino);
+        });
+        renderizarProductos(filtrados);
+      });
+    }
+
     // Cargar dinámicamente las categorías en el menú lateral estilo Oechsle
     async function cargarMenuLateralCategorias() {
       try {
@@ -142,7 +352,6 @@
         const listaCategorias = document.getElementById('side-category-list');
         if (!listaCategorias) return;
 
-        // Opción predeterminada para ver todos los productos
         listaCategorias.innerHTML = `
           <li onclick="seleccionarCategoriaMenu('Todas')">
             <span>Todas las categorías</span>
@@ -150,7 +359,6 @@
           </li>
         `;
 
-        // Agregar cada categoría obtenida de la base de datos
         categorias.forEach(cat => {
           listaCategorias.innerHTML += `
             <li onclick="seleccionarCategoriaMenu('${cat}')">
@@ -164,7 +372,6 @@
       }
     }
 
-    // Función al hacer clic en una categoría del menú lateral
     function seleccionarCategoriaMenu(categoria) {
       if (typeof window.filtrarPorCategoriaExterna === 'function') {
         window.filtrarPorCategoriaExterna(categoria);
@@ -172,7 +379,6 @@
       toggleMenuLateral(false);
     }
 
-    // Controlar apertura y cierre del menú lateral
     function toggleMenuLateral(abrir) {
       const menu = document.getElementById('side-menu');
       const overlay = document.getElementById('side-menu-overlay');
@@ -229,9 +435,7 @@
         const data = await response.json();
 
         if (data.init_point) {
-          // Limpiar el carrito local tras generar el pago
           localStorage.removeItem('carrito');
-          // Redirigir al usuario a la pasarela de pagos
           window.location.href = data.init_point;
         } else {
           alert('No se pudo generar el enlace de pago de Mercado Pago.');
@@ -244,7 +448,11 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
+      verificarSesionUsuario();
+      cargarProductosTienda();
       cargarMenuLateralCategorias();
+      configurarBuscador();
+      actualizarContadorCarrito();
 
       const btnMenu = document.getElementById('btn-menu-lateral');
       const btnClose = document.getElementById('btn-close-side-menu');
@@ -254,10 +462,22 @@
       btnClose?.addEventListener('click', () => toggleMenuLateral(false));
       overlay?.addEventListener('click', () => toggleMenuLateral(false));
 
-      // Asignar la función de pago segura al botón de checkout
+      // Modal Carrito Eventos
+      const btnCart = document.getElementById('btn-cart');
+      const cartModal = document.getElementById('cart-modal');
+      const btnCloseCart = document.getElementById('btn-close-cart');
+
+      btnCart?.addEventListener('click', () => {
+        renderizarModalCarrito();
+        cartModal.classList.remove('hidden');
+      });
+
+      btnCloseCart?.addEventListener('click', () => {
+        cartModal.classList.add('hidden');
+      });
+
       const btnCheckout = document.getElementById('btn-checkout');
       if (btnCheckout) {
-        // Reemplazamos cualquier evento previo clonando o sobreescribiendo el onclick
         btnCheckout.onclick = procesarPagoCheckout;
       }
     });
