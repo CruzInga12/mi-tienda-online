@@ -7,8 +7,33 @@
   <link rel="stylesheet" href="styles.css">
   <!-- Íconos FontAwesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- SDK oficial de Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+  <!-- SDKs y configuración de Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDC1YoBAKkCgq81AKkzbmTwQ-zl_nBuyUQ",
+      authDomain: "mitiendavirtual-4d5bd.firebaseapp.com",
+      projectId: "mitiendavirtual-4d5bd",
+      storageBucket: "mitiendavirtual-4d5bd.firebasestorage.app",
+      messagingSenderId: "677793339948",
+      appId: "1:677793339948:web:88b76ddf0283701a914f89",
+      measurementId: "G-G01ZV8HYC3"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+  </script>
 </head>
+
 <body>
+
+  <!-- SDK oficial de Apple Sign In -->
+  <script type="text/javascript" 
+  src="https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js">  
+  </script>
 
   <!-- Encabezado Principal Integrado -->
   <header class="main-header">
@@ -74,11 +99,11 @@
           </div>
         </div>
 
-        <!-- Botón de Iniciar Sesión (Se muestra si NO hay sesión activa) -->
-        <a href="/auth.html" id="btn-login-link" class="user-action">
+        <!-- Botón de Iniciar Sesión Modificado para abrir el Modal Moderno -->
+        <button id="btn-login-link" class="user-action" onclick="abrirModalAuth()" style="background: none; border: none; cursor: pointer;">
           <i class="fa-regular fa-user"></i>
           <span>Iniciar Sesión</span>
-        </a>
+        </button>
 
         <!-- Botón del Carrito -->
         <button id="btn-cart" class="cart-action-btn">
@@ -131,8 +156,195 @@
 
   </main>
 
-  <!-- Script global de la tienda (Manejo de sesión, catálogo, carrito y enlaces a producto.html) -->
+  <!-- MODAL DE INICIO DE SESIÓN ESTILO ALIEXPRESS -->
+  <div id="auth-modal" class="auth-modal-overlay" style="display: none;">
+    <div class="auth-modal-container">
+        <!-- Botón para cerrar -->
+        <button class="auth-close-btn" onclick="cerrarModalAuth()">&times;</button>
+
+        <!-- Cabecera de Seguridad -->
+        <div class="auth-header-security">
+            <span><i class="fas fa-lock"></i> Todos los datos están protegidos</span>
+        </div>
+
+        <!-- Banner de Garantías -->
+        <div class="auth-guarantees">
+            <div class="guarantee-item">
+                <i class="fas fa-tag"></i>
+                <div><strong>Ajuste de precios</strong><span>En un plazo de 30 días</span></div>
+            </div>
+            <div class="guarantee-item">
+                <i class="fas fa-truck"></i>
+                <div><strong>Envío gratis</strong><span>¡Solo para ti!</span></div>
+            </div>
+            <div class="guarantee-item">
+                <i class="fas fa-undo"></i>
+                <div><strong>Devoluciones gratis</strong><span>Hasta 90 días</span></div>
+            </div>
+            <div class="guarantee-item">
+                <i class="fas fa-shield-alt"></i>
+                <div><strong>Entrega garantizada</strong><span>Reembolso por cualquier problema</span></div>
+            </div>
+        </div>
+
+        <!-- Cuerpo Dividido en 2 Columnas -->
+        <div class="auth-body-grid">
+            
+            <!-- Columna Izquierda: Cuenta guardada / Google -->
+            <div class="auth-left-col">
+                <h3>Inicia sesión con una cuenta utilizada anteriormente</h3>
+                
+                <div id="saved-account-box" class="saved-account-card">
+                    <div class="account-avatar" id="auth-user-initial-modal">C</div>
+                    <div class="account-info">
+                        <strong id="auth-user-name-modal">Cruz Inga</strong>
+                        <span id="auth-user-email-modal">cru***dez@gmail.com</span>
+                    </div>
+                </div>
+
+                <!-- Botón Oficial de Google en Columna Izquierda -->
+                <div id="buttonDivLeft" style="width: 100%; margin-bottom: 10px;"></div>
+
+                <button type="button" class="btn-brand-outline" onclick="mostrarFormularioEmail()">
+                    Utiliza otra forma de iniciar sesión
+                </button>
+
+                <div class="auth-footer-links">
+                    <a href="#" onclick="eliminarCuentaGuardada()">Eliminar cuenta</a> | 
+                    <a href="#">¿Problemas al iniciar sesión?</a>
+                </div>
+            </div>
+
+            <!-- Columna Derecha: Registro / Nuevo Acceso -->
+            <div class="auth-right-col">
+                <h3>Regístrate/inicia sesión con otra cuenta</h3>
+                
+                <div class="social-login-options">
+                    <!-- Botón Oficial de Google en Columna Derecha -->
+                    <div id="buttonDivRight" style="width: 100%; margin-bottom: 10px;"></div>
+                </div>
+
+                <!-- Formulario de Email conectado a Firebase -->
+                <div id="email-login-form-container" style="display: none; margin-top: 15px;">
+                    <form id="form-login-backend" onsubmit="manejarLoginBackend(event)">
+                        <input type="email" id="login-email" placeholder="Correo electrónico" required class="auth-input">
+                        <input type="password" id="login-password" placeholder="Contraseña" required class="auth-input" style="margin-top: 10px;">
+                        <button type="submit" class="btn-submit-backend" style="margin-top: 10px;">Entrar a la tienda</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pie de página legal -->
+        <div class="auth-modal-footer">
+            Al iniciar sesión o continuar, aceptas nuestros <a href="#">Términos de uso</a> y <a href="#">Política de privacidad</a>.
+        </div>
+    </div>
+</div>
+
+<!-- Estilos CSS del Modal -->
+<style>
+.auth-modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 9999;
+    font-family: Arial, sans-serif;
+}
+.auth-modal-container {
+    background: #fff; width: 850px; max-width: 95%; border-radius: 12px; padding: 25px;
+    position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+.auth-close-btn {
+    position: absolute; top: 15px; right: 20px; background: none; border: none; font-size: 24px; cursor: pointer; color: #666;
+}
+.auth-header-security {
+    text-align: center; color: #00875a; font-size: 13px; font-weight: bold; margin-bottom: 15px;
+}
+.auth-guarantees {
+    display: flex; justify-content: space-between; background: #f4fbf7; padding: 12px; border-radius: 8px; margin-bottom: 25px; font-size: 11px; color: #333; gap: 10px;
+}
+.guarantee-item { display: flex; align-items: center; gap: 8px; }
+.guarantee-item i { color: #00875a; font-size: 16px; }
+.guarantee-item strong { display: block; color: #111; }
+.auth-body-grid {
+    display: flex; gap: 30px; border-top: 1px solid #eee; border-bottom: 1px solid #eee; padding: 20px 0;
+}
+.auth-left-col { flex: 1; border-right: 1px solid #eee; padding-right: 25px; }
+.auth-right-col { flex: 1; }
+.auth-left-col h3, .auth-right-col h3 { font-size: 14px; color: #333; margin-bottom: 15px; }
+.saved-account-card {
+    display: flex; align-items: center; background: #f9f9f9; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #e5e5e5;
+}
+.account-avatar {
+    width: 45px; height: 45px; background: #8b5a2b; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; margin-right: 12px;
+}
+.account-info strong { display: block; font-size: 13px; color: #333; }
+.account-info span { font-size: 12px; color: #777; }
+.btn-brand-google, .btn-brand-outline, .social-btn, .btn-submit-backend {
+    width: 100%; padding: 11px; border-radius: 25px; font-size: 13px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px; text-align: center;
+}
+.btn-brand-google { background: #fff; border: 1px solid #ccc; color: #333; }
+.btn-brand-outline { background: #fff; border: 1px solid #ccc; color: #333; }
+.btn-brand-google:hover, .btn-brand-outline:hover { background: #f5f5f5; }
+.social-btn { background: #fff; border: 1px solid #ccc; color: #333; border-radius: 20px; }
+.social-btn:hover { background: #f9f9f9; }
+.auth-footer-links { text-align: center; font-size: 11px; margin-top: 15px; }
+.auth-footer-links a { color: #666; text-decoration: none; }
+.auth-footer-links a:hover { text-decoration: underline; }
+.auth-input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+.btn-submit-backend { background: #10b981; color: white; border: none; border-radius: 6px; }
+.btn-submit-backend:hover { background: #059669; }
+.auth-modal-footer { text-align: center; font-size: 11px; color: #777; margin-top: 15px; }
+.auth-modal-footer a { color: #2563eb; text-decoration: none; }
+</style>
+
+  <!-- Script global de la tienda y control de autenticación con Firebase -->
   <script>
+    // Inicializar Google Sign-In con tu Client ID y renderizar en ambos botones
+    window.onload = function () {
+      google.accounts.id.initialize({
+        client_id: "669620373732-8hbnn66m74as41kionmvrsb6440gma4i.apps.googleusercontent.com",
+        callback: handleCredentialResponse
+      });
+
+      // Renderizar botón en la columna izquierda
+      google.accounts.id.renderButton(
+        document.getElementById("buttonDivLeft"),
+        { theme: "outline", size: "large", width: "100%" }
+      );
+
+      // Renderizar botón en la columna derecha
+      google.accounts.id.renderButton(
+        document.getElementById("buttonDivRight"),
+        { theme: "outline", size: "large", width: "100%" }
+      );
+    };
+
+    // Callback de autenticación con Google
+    async function handleCredentialResponse(response) {
+      try {
+        const res = await fetch('/api/auth/google', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ credential: response.credential })
+        });
+
+        const resultado = await res.json();
+
+        if (res.ok) {
+          localStorage.setItem('usuario', JSON.stringify(resultado.usuario));
+          localStorage.setItem('token', resultado.token);
+          alert(`¡Bienvenido a la tienda, ${resultado.usuario.nombre}!`);
+          cerrarModalAuth();
+          window.location.reload();
+        } else {
+          alert('Error al autenticar con Google: ' + resultado.error);
+        }
+      } catch (error) {
+        console.error('Error de red:', error);
+        alert('No se pudo conectar con el servidor.');
+      }
+    }
+
     // Variables globales para la tienda
     let todosLosProductos = [];
     let categoriaActualSeleccionada = 'Todas';
@@ -171,11 +383,17 @@
         }
       }
 
-      // Configurar botón de cerrar sesión
+      // Configurar botón de cerrar sesión con Firebase
       const btnLogout = document.getElementById('btn-logout-dropdown');
       if (btnLogout) {
-        btnLogout.onclick = () => {
+        btnLogout.onclick = async () => {
+          try {
+            await auth.signOut();
+          } catch (e) {
+            console.error('Error al cerrar sesión en Firebase:', e);
+          }
           localStorage.removeItem('usuario');
+          localStorage.removeItem('token');
           localStorage.removeItem('carrito');
           window.location.reload();
         };
@@ -194,7 +412,7 @@
       }
     }
 
-    // 3. Renderizar cuadrícula de productos (conectado a producto.html por ID)
+    // 3. Renderizar cuadrícula de productos
     function renderizarProductos(productos) {
       const contenedor = document.getElementById('product-list');
       if (!contenedor) return;
@@ -213,10 +431,8 @@
 
         contenedor.innerHTML += `
           <div class="product-card" style="background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-            <div>
-              <img src="${imagen}" alt="${nombre}" style="width: 100%; height: 160px; object-fit: cover; border-radius: 6px; margin-bottom: 10px;">
-              <h3 style="font-size: 16px; margin: 0 0 8px 0; color: #1f2937; height: 40px; overflow: hidden;">${nombre}</h3>
-              <p style="font-size: 18px; font-weight: bold; color: #2563eb; margin: 0 0 15px 0;">S/ ${precio}</p>
+            <div style="width: 100%; height: 160px; background: #f9f9f9; border-radius: 6px; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+            <img src="${imagen}" alt="${nombre}" style="max-width: 100%; max-height: 100%; object-fit: contain;">
             </div>
             <div style="display: flex; flex-direction: column; gap: 8px;">
               <a href="producto.html?id=${prodId}" style="text-align: center; background: #f3f4f6; color: #374151; padding: 8px; border-radius: 4px; text-decoration: none; font-size: 14px; font-weight: 500;">Ver Detalle</a>
@@ -227,7 +443,7 @@
       });
     }
 
-    // 4. Filtrar productos por categoría externa (desde el menú lateral)
+    // 4. Filtrar productos por categoría externa
     window.filtrarPorCategoriaExterna = function(categoria) {
       categoriaActualSeleccionada = categoria;
       const tituloSeccion = document.getElementById('titulo-seccion-catalogo');
@@ -343,7 +559,7 @@
       });
     }
 
-    // Cargar dinámicamente las categorías en el menú lateral estilo Oechsle
+    // Cargar dinámicamente las categorías en el menú lateral
     async function cargarMenuLateralCategorias() {
       try {
         const res = await fetch('/api/categorias');
@@ -391,14 +607,101 @@
       }
     }
 
-    // Lógica integrada para procesar el pago y registrar automáticamente en el historial de SQLite
+    // Funciones de control del Modal de Autenticación
+    function abrirModalAuth() {
+        document.getElementById('auth-modal').style.display = 'flex';
+        verificarCuentaGuardadaModal();
+    }
+
+    function cerrarModalAuth() {
+        document.getElementById('auth-modal').style.display = 'none';
+    }
+
+    function verificarCuentaGuardadaModal() {
+        const usuarioGuardado = JSON.parse(localStorage.getItem('usuario'));
+        if (usuarioGuardado && usuarioGuardado.nombre) {
+            document.getElementById('auth-user-name-modal').textContent = usuarioGuardado.nombre;
+            document.getElementById('auth-user-email-modal').textContent = usuarioGuardado.email;
+            document.getElementById('auth-user-initial-modal').textContent = usuarioGuardado.nombre.charAt(0).toUpperCase();
+        }
+    }
+
+    function mostrarFormularioEmail() {
+        const contenedor = document.getElementById('email-login-form-container');
+        contenedor.style.display = contenedor.style.display === 'none' ? 'block' : 'none';
+    }
+
+    // 7. INICIAR SESIÓN / REGISTRO REAL CON FIREBASE AUTH
+    async function manejarLoginBackend(e) {
+        e.preventDefault();
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+
+        try {
+            // Intentar iniciar sesión en Firebase
+            const userCredential = await auth.signInWithEmailAndPassword(email, password);
+            const user = userCredential.user;
+            const token = await user.getIdToken();
+
+            const usuarioData = {
+                id: user.uid,
+                nombre: user.displayName || email.split('@')[0],
+                email: user.email
+            };
+
+            localStorage.setItem('usuario', JSON.stringify(usuarioData));
+            localStorage.setItem('token', token);
+
+            alert(`¡Bienvenido de nuevo, ${usuarioData.nombre}!`);
+            cerrarModalAuth();
+            window.location.reload();
+
+        } catch (error) {
+            console.error('Error al iniciar sesión con Firebase:', error.message);
+            
+            // Si el usuario no existe, lo registramos automáticamente en Firebase
+            if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+                try {
+                    const newUserCredential = await auth.createUserWithEmailAndPassword(email, password);
+                    const newUser = newUserCredential.user;
+                    const token = await newUser.getIdToken();
+
+                    const usuarioData = {
+                        id: newUser.uid,
+                        nombre: email.split('@')[0],
+                        email: newUser.email
+                    };
+
+                    localStorage.setItem('usuario', JSON.stringify(usuarioData));
+                    localStorage.setItem('token', token);
+
+                    alert(`¡Cuenta creada y sesión iniciada con éxito, ${usuarioData.nombre}!`);
+                    cerrarModalAuth();
+                    window.location.reload();
+                } catch (regError) {
+                    alert('Error al registrar usuario: ' + regError.message);
+                }
+            } else {
+                alert('Error al iniciar sesión: ' + error.message);
+            }
+        }
+    }
+
+    function eliminarCuentaGuardada() {
+        localStorage.removeItem('usuario');
+        localStorage.removeItem('token');
+        alert('Cuenta eliminada del historial del navegador.');
+        verificarCuentaGuardadaModal();
+    }
+
+    // Lógica integrada para procesar el pago
     async function procesarPagoCheckout() {
       const usuario = JSON.parse(localStorage.getItem('usuario'));
       const carrito = JSON.parse(localStorage.getItem('carrito')) || [];
 
       if (!usuario) {
         alert('Debes iniciar sesión para realizar una compra.');
-        window.location.href = '/auth.html';
+        abrirModalAuth();
         return;
       }
 
@@ -410,7 +713,6 @@
       const montoTotal = carrito.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
 
       try {
-        // 1. Guardar el pedido en la base de datos SQLite antes de redirigir a Mercado Pago
         await fetch('/api/pedidos', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -422,7 +724,6 @@
           })
         });
 
-        // 2. Solicitar la preferencia de pago a Mercado Pago
         const response = await fetch('/api/crear-preferencia', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -438,7 +739,7 @@
           localStorage.removeItem('carrito');
           window.location.href = data.init_point;
         } else {
-          alert('No se pudo generar el enlace de pago de Mercado Pago.');
+          alert('No se pudo generar el enlace de pago.');
         }
 
       } catch (error) {
@@ -474,12 +775,12 @@
 
       btnCloseCart?.addEventListener('click', () => {
         cartModal.classList.add('hidden');
-      });
+      });  
 
       const btnCheckout = document.getElementById('btn-checkout');
       if (btnCheckout) {
         btnCheckout.onclick = procesarPagoCheckout;
-      }
+      }      
     });
   </script>
 </body>

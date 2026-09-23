@@ -1,4 +1,4 @@
-// server.js - Servidor Express con SQLite y Mercado Pago integrado al 100%
+// server.js - Servidor Express con SQLite, Mercado Pago y Google OAuth integrado al 100%
 
 const express = require('express');
 const cors = require('cors');
@@ -7,9 +7,14 @@ const fs = require('fs');
 const multer = require('multer'); // <- 1. Importado para manejar subida de archivos
 const db = require('./database'); // Importa la conexión SQLite proporcionada
 const { MercadoPagoConfig, Preference } = require('mercadopago');
+const { OAuth2Client } = require('google-auth-library'); // <- Importado para Google OAuth
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Configuración de Google OAuth Client (Usa el mismo ID que configuraste en el frontend)
+const GOOGLE_CLIENT_ID = '669620373732-8hbnn66m74as41kionmvrsb6440gma4i.apps.googleusercontent.com';
+const clientGoogle = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 // Asegurar que exista la carpeta 'uploads' físicamente
 const uploadDir = path.join(__dirname, 'uploads');
@@ -266,6 +271,66 @@ app.post('/api/login', (req, res) => {
       }
     });
   });
+});
+
+// 3.0. Autenticación Real con Google OAuth
+app.post('/api/auth/google', async (req, res) => {
+  const { credential } = req.body;
+
+  try {
+    const ticket = await clientGoogle.verifyIdToken({
+        idToken: credential,
+        audience: GOOGLE_CLIENT_ID,
+    });
+    
+    const payload = ticket.getPayload();
+    const email = payload.email;
+    const nombre = payload.name;
+
+    db.get('SELECT * FROM usuarios WHERE email = ?', [email], (err, usuario) => {
+      if (err) {
+        return res.status(500).json({ error: 'Error en la base de datos' });
+      }
+
+      if (usuario) {
+        return res.json({
+          token: `google-jwt-token-${usuario.id}`,
+          usuario: {
+            id: usuario.id,
+            nombre: usuario.nombre,
+            email: usuario.email,
+            rol: usuario.rol,
+            ciudad: usuario.ciudad || '',
+            departamento: usuario.departamento || ''
+          }
+        });
+      } else {
+        const query = `INSERT INTO usuarios (nombre, email, password) VALUES (?, ?, ?)`;
+        db.run(query, [nombre, email, 'GOOGLE_AUTH_SECURE'], function(err) {
+          if (err) {
+            return res.status(500).json({ error: 'Error al registrar usuario de Google' });
+          }
+          
+          const nuevoUsuarioId = this.lastID;
+          return res.json({
+            token: `google-jwt-token-${nuevoUsuarioId}`,
+            usuario: {
+              id: nuevoUsuarioId,
+              nombre: nombre,
+              email: email,
+              rol: 'cliente',
+              ciudad: '',
+              departamento: ''
+            }
+          });
+        });
+      }
+    });
+
+  } catch (error) {
+    console.error('Error al verificar token de Google:', error);
+    res.status(401).json({ error: 'Token de Google inválido' });
+  }
 });
 
 // 3.1. Actualizar perfil de usuario
