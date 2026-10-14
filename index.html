@@ -63,10 +63,9 @@
         </button>
       </div>
 
-      <!-- Acciones de Usuario y Sesión (Menú Desplegable por Hover) -->
+      <!-- Acciones de Usuario y Sesión -->
       <div class="header-actions">
         
-        <!-- Contenedor principal con hover -->
         <div class="user-menu-container" id="user-menu-wrapper" style="display: none;">
           <div class="user-trigger-btn">
             <div class="user-avatar-circle" id="user-initial">C</div>
@@ -77,7 +76,6 @@
             <i class="fa-solid fa-chevron-down" style="font-size: 11px; color: #666;"></i>
           </div>
 
-          <!-- Panel Flotante que aparece al poner el mouse -->
           <div class="user-dropdown-panel">
             <div class="dropdown-header-user">
               <div class="user-avatar-circle large" id="user-initial-large">C</div>
@@ -92,20 +90,18 @@
               <li><a href="/historial.html"><i class="fa-solid fa-clipboard-list"></i> Tus pedidos</a></li>
               <li><a href="reseñas.html"><i class="fa-solid fa-star"></i> Tus reseñas</a></li>
               <li><a href="#" onclick="alert('Próximamente: Cupones')"><i class="fa-solid fa-ticket"></i> Cupones y ofertas</a></li>
-              <li><a href="#" onclick="alert('Próximamente: Direcciones')"><i class="fa-solid fa-location-dot"></i> Direcciones de envío</a></li>
+              <li><a href="direcciones.html"><i class="fa-solid fa-location-dot"></i> Direcciones de envío</a></li>
               <li><hr style="border: none; border-top: 1px solid #f0f0f0; margin: 5px 0;"></li>
               <li><button id="btn-logout-dropdown" class="dropdown-logout-btn"><i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión</button></li>
             </ul>
           </div>
         </div>
 
-        <!-- Botón de Iniciar Sesión Modificado para abrir el Modal Moderno -->
         <button id="btn-login-link" class="user-action" onclick="abrirModalAuth()" style="background: none; border: none; cursor: pointer;">
           <i class="fa-regular fa-user"></i>
           <span>Iniciar Sesión</span>
         </button>
 
-        <!-- Botón del Carrito -->
         <button id="btn-cart" class="cart-action-btn">
           <div class="cart-icon-wrapper">
             <i class="fa-solid fa-cart-shopping"></i>
@@ -133,13 +129,11 @@
   <!-- Contenido Principal -->
   <main class="container" style="max-width: 1280px; margin: 25px auto; padding: 0 15px;">
 
-    <!-- Catálogo de Productos -->
     <section class="products-section">
       <h2 style="margin-bottom: 20px; font-size: 24px; color: #1f2937;" id="titulo-seccion-catalogo">Productos Disponibles</h2>
       <div id="product-list" class="product-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px;"></div>
     </section>
 
-    <!-- Carrito Lateral / Modal -->
     <aside id="cart-modal" class="cart-modal hidden">
       <div class="cart-content">
         <h2>Tu Carrito</h2>
@@ -156,75 +150,32 @@
 
   </main>
 
-  <!-- MODAL DE INICIO DE SESIÓN ESTILO ALIEXPRESS -->
+  <!-- MODAL DE INICIO DE SESIÓN -->
   <div id="auth-modal" class="auth-modal-overlay" style="display: none;">
     <div class="auth-modal-container">
-        <!-- Botón para cerrar -->
         <button class="auth-close-btn" onclick="cerrarModalAuth()">&times;</button>
 
-        <!-- Cabecera de Seguridad -->
         <div class="auth-header-security">
             <span><i class="fas fa-lock"></i> Todos los datos están protegidos</span>
         </div>
 
-        <!-- Banner de Garantías -->
-        <div class="auth-guarantees">
-            <div class="guarantee-item">
-                <i class="fas fa-tag"></i>
-                <div><strong>Ajuste de precios</strong><span>En un plazo de 30 días</span></div>
-            </div>
-            <div class="guarantee-item">
-                <i class="fas fa-truck"></i>
-                <div><strong>Envío gratis</strong><span>¡Solo para ti!</span></div>
-            </div>
-            <div class="guarantee-item">
-                <i class="fas fa-undo"></i>
-                <div><strong>Devoluciones gratis</strong><span>Hasta 90 días</span></div>
-            </div>
-            <div class="guarantee-item">
-                <i class="fas fa-shield-alt"></i>
-                <div><strong>Entrega garantizada</strong><span>Reembolso por cualquier problema</span></div>
-            </div>
-        </div>
-
-        <!-- Cuerpo Dividido en 2 Columnas -->
         <div class="auth-body-grid">
-            
-            <!-- Columna Izquierda: Cuenta guardada / Google -->
             <div class="auth-left-col">
                 <h3>Inicia sesión con una cuenta utilizada anteriormente</h3>
                 
-                <div id="saved-account-box" class="saved-account-card">
-                    <div class="account-avatar" id="auth-user-initial-modal">C</div>
-                    <div class="account-info">
-                        <strong id="auth-user-name-modal">Cruz Inga</strong>
-                        <span id="auth-user-email-modal">cru***dez@gmail.com</span>
-                    </div>
-                </div>
-
-                <!-- Botón Oficial de Google en Columna Izquierda -->
                 <div id="buttonDivLeft" style="width: 100%; margin-bottom: 10px;"></div>
 
                 <button type="button" class="btn-brand-outline" onclick="mostrarFormularioEmail()">
                     Utiliza otra forma de iniciar sesión
                 </button>
-
-                <div class="auth-footer-links">
-                    <a href="#" onclick="eliminarCuentaGuardada()">Eliminar cuenta</a> | 
-                    <a href="#">¿Problemas al iniciar sesión?</a>
-                </div>
             </div>
 
-            <!-- Columna Derecha: Registro / Nuevo Acceso -->
             <div class="auth-right-col">
-                <h3>Regístrate/inicia sesión con otra cuenta</h3>
-                
+                <h3>Regístrate / Inicia sesión con correo</h3>
                 <div class="social-login-options">
-                    <!-- Botón Oficial de Google en Columna Derecha -->
                     <div id="buttonDivRight" style="width: 100%; margin-bottom: 10px;"></div>
                 </div>
 
-                <!-- Formulario de Email conectado a Firebase -->
                 <div id="email-login-form-container" style="display: none; margin-top: 15px;">
                     <form id="form-login-backend" onsubmit="manejarLoginBackend(event)">
                         <input type="email" id="login-email" placeholder="Correo electrónico" required class="auth-input">
@@ -234,92 +185,43 @@
                 </div>
             </div>
         </div>
-
-        <!-- Pie de página legal -->
-        <div class="auth-modal-footer">
-            Al iniciar sesión o continuar, aceptas nuestros <a href="#">Términos de uso</a> y <a href="#">Política de privacidad</a>.
-        </div>
     </div>
-</div>
+  </div>
 
-<!-- Estilos CSS del Modal -->
 <style>
-.auth-modal-overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 9999;
-    font-family: Arial, sans-serif;
-}
-.auth-modal-container {
-    background: #fff; width: 850px; max-width: 95%; border-radius: 12px; padding: 25px;
-    position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-}
-.auth-close-btn {
-    position: absolute; top: 15px; right: 20px; background: none; border: none; font-size: 24px; cursor: pointer; color: #666;
-}
-.auth-header-security {
-    text-align: center; color: #00875a; font-size: 13px; font-weight: bold; margin-bottom: 15px;
-}
-.auth-guarantees {
-    display: flex; justify-content: space-between; background: #f4fbf7; padding: 12px; border-radius: 8px; margin-bottom: 25px; font-size: 11px; color: #333; gap: 10px;
-}
-.guarantee-item { display: flex; align-items: center; gap: 8px; }
-.guarantee-item i { color: #00875a; font-size: 16px; }
-.guarantee-item strong { display: block; color: #111; }
-.auth-body-grid {
-    display: flex; gap: 30px; border-top: 1px solid #eee; border-bottom: 1px solid #eee; padding: 20px 0;
-}
+.auth-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 9999; }
+.auth-modal-container { background: #fff; width: 850px; max-width: 95%; border-radius: 12px; padding: 25px; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+.auth-close-btn { position: absolute; top: 15px; right: 20px; background: none; border: none; font-size: 24px; cursor: pointer; color: #666; }
+.auth-header-security { text-align: center; color: #00875a; font-size: 13px; font-weight: bold; margin-bottom: 15px; }
+.auth-body-grid { display: flex; gap: 30px; border-top: 1px solid #eee; padding: 20px 0; }
 .auth-left-col { flex: 1; border-right: 1px solid #eee; padding-right: 25px; }
 .auth-right-col { flex: 1; }
-.auth-left-col h3, .auth-right-col h3 { font-size: 14px; color: #333; margin-bottom: 15px; }
-.saved-account-card {
-    display: flex; align-items: center; background: #f9f9f9; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #e5e5e5;
-}
-.account-avatar {
-    width: 45px; height: 45px; background: #8b5a2b; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; margin-right: 12px;
-}
-.account-info strong { display: block; font-size: 13px; color: #333; }
-.account-info span { font-size: 12px; color: #777; }
-.btn-brand-google, .btn-brand-outline, .social-btn, .btn-submit-backend {
-    width: 100%; padding: 11px; border-radius: 25px; font-size: 13px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px; text-align: center;
-}
-.btn-brand-google { background: #fff; border: 1px solid #ccc; color: #333; }
-.btn-brand-outline { background: #fff; border: 1px solid #ccc; color: #333; }
-.btn-brand-google:hover, .btn-brand-outline:hover { background: #f5f5f5; }
-.social-btn { background: #fff; border: 1px solid #ccc; color: #333; border-radius: 20px; }
-.social-btn:hover { background: #f9f9f9; }
-.auth-footer-links { text-align: center; font-size: 11px; margin-top: 15px; }
-.auth-footer-links a { color: #666; text-decoration: none; }
-.auth-footer-links a:hover { text-decoration: underline; }
 .auth-input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
-.btn-submit-backend { background: #10b981; color: white; border: none; border-radius: 6px; }
-.btn-submit-backend:hover { background: #059669; }
-.auth-modal-footer { text-align: center; font-size: 11px; color: #777; margin-top: 15px; }
-.auth-modal-footer a { color: #2563eb; text-decoration: none; }
+.btn-submit-backend { width: 100%; padding: 11px; background: #10b981; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+
+/* Estilos funcionales para que el menú lateral responda correctamente al abrirse */
+.side-menu { position: fixed; top: 0; left: -300px; width: 300px; height: 100%; background: white; box-shadow: 4px 0 15px rgba(0,0,0,0.1); z-index: 10000; transition: left 0.3s ease; display: flex; flex-direction: column; }
+.side-menu.active { left: 0; }
+.side-menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; display: none; }
+.side-menu-overlay.active { display: block; }
+.side-menu-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid #eee; background: #f9fafb; }
+.close-side-menu { background: none; border: none; font-size: 22px; cursor: pointer; }
+.side-category-list { list-style: none; padding: 0; margin: 0; overflow-y: auto; }
+.side-category-list li { padding: 15px 20px; border-bottom: 1px solid #f0f0f0; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: 500; color: #333; }
+.side-category-list li:hover { background: #f3f4f6; color: #2563eb; }
 </style>
 
-  <!-- Script global de la tienda y control de autenticación con Firebase -->
   <script>
-    // Inicializar Google Sign-In con tu Client ID y renderizar en ambos botones
     window.onload = function () {
       google.accounts.id.initialize({
         client_id: "669620373732-8hbnn66m74as41kionmvrsb6440gma4i.apps.googleusercontent.com",
         callback: handleCredentialResponse
       });
 
-      // Renderizar botón en la columna izquierda
-      google.accounts.id.renderButton(
-        document.getElementById("buttonDivLeft"),
-        { theme: "outline", size: "large", width: "100%" }
-      );
-
-      // Renderizar botón en la columna derecha
-      google.accounts.id.renderButton(
-        document.getElementById("buttonDivRight"),
-        { theme: "outline", size: "large", width: "100%" }
-      );
+      google.accounts.id.renderButton(document.getElementById("buttonDivLeft"), { theme: "outline", size: "large", width: "100%" });
+      google.accounts.id.renderButton(document.getElementById("buttonDivRight"), { theme: "outline", size: "large", width: "100%" });
     };
 
-    // Callback de autenticación con Google
     async function handleCredentialResponse(response) {
       try {
         const res = await fetch('/api/auth/google', {
@@ -327,29 +229,24 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ credential: response.credential })
         });
-
         const resultado = await res.json();
-
         if (res.ok) {
           localStorage.setItem('usuario', JSON.stringify(resultado.usuario));
           localStorage.setItem('token', resultado.token);
-          alert(`¡Bienvenido a la tienda, ${resultado.usuario.nombre}!`);
+          alert(`¡Bienvenido, ${resultado.usuario.nombre}!`);
           cerrarModalAuth();
           window.location.reload();
         } else {
-          alert('Error al autenticar con Google: ' + resultado.error);
+          alert('Error al autenticar: ' + resultado.error);
         }
       } catch (error) {
-        console.error('Error de red:', error);
-        alert('No se pudo conectar con el servidor.');
+        console.error('Error:', error);
       }
     }
 
-    // Variables globales para la tienda
     let todosLosProductos = [];
     let categoriaActualSeleccionada = 'Todas';
 
-    // 1. Verificar sesión de usuario al cargar la página
     function verificarSesionUsuario() {
       const usuarioStr = localStorage.getItem('usuario');
       const userMenuWrapper = document.getElementById('user-menu-wrapper');
@@ -362,36 +259,22 @@
           if (btnLoginLink) btnLoginLink.style.display = 'none';
 
           const inicial = usuario.nombre ? usuario.nombre.charAt(0).toUpperCase() : 'C';
-          const elInicial = document.getElementById('user-initial');
-          const elInicialLarge = document.getElementById('user-initial-large');
-          const elDisplayName = document.getElementById('user-display-name');
-          const elDropdownUsername = document.getElementById('dropdown-username');
-          const elDropdownEmail = document.getElementById('dropdown-email');
-
-          if (elInicial) elInicial.textContent = inicial;
-          if (elInicialLarge) elInicialLarge.textContent = inicial;
-          if (elDisplayName) elDisplayName.textContent = usuario.nombre || 'Mi Cuenta';
-          if (elDropdownUsername) elDropdownUsername.textContent = usuario.nombre || 'Usuario';
-          if (elDropdownEmail) elDropdownEmail.textContent = usuario.email || '';
+          document.getElementById('user-initial').textContent = inicial;
+          document.getElementById('user-initial-large').textContent = inicial;
+          document.getElementById('user-display-name').textContent = usuario.nombre || 'Mi Cuenta';
+          document.getElementById('dropdown-username').textContent = usuario.nombre || 'Usuario';
+          document.getElementById('dropdown-email').textContent = usuario.email || '';
         } catch (e) {
-          console.error('Error al parsear datos de usuario:', e);
+          console.error('Error:', e);
         }
       } else {
         if (userMenuWrapper) userMenuWrapper.style.display = 'none';
-        if (btnLoginLink) {
-          btnLoginLink.style.display = 'flex';
-        }
+        if (btnLoginLink) btnLoginLink.style.display = 'flex';
       }
 
-      // Configurar botón de cerrar sesión con Firebase
       const btnLogout = document.getElementById('btn-logout-dropdown');
       if (btnLogout) {
         btnLogout.onclick = async () => {
-          try {
-            await auth.signOut();
-          } catch (e) {
-            console.error('Error al cerrar sesión en Firebase:', e);
-          }
           localStorage.removeItem('usuario');
           localStorage.removeItem('token');
           localStorage.removeItem('carrito');
@@ -400,7 +283,6 @@
       }
     }
 
-    // 2. Cargar productos desde la base de datos
     async function cargarProductosTienda() {
       try {
         const res = await fetch('/api/productos');
@@ -408,17 +290,15 @@
         renderizarProductos(todosLosProductos);
       } catch (error) {
         console.error('Error al cargar productos:', error);
-        document.getElementById('product-list').innerHTML = '<p style="color: red;">Error al conectar con el servidor.</p>';
       }
     }
 
-    // 3. Renderizar cuadrícula de productos
     function renderizarProductos(productos) {
       const contenedor = document.getElementById('product-list');
       if (!contenedor) return;
 
       if (!productos || productos.length === 0) {
-        contenedor.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #666; padding: 30px;">No hay productos disponibles en esta categoría.</p>';
+        contenedor.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #666; padding: 30px;">No hay productos disponibles.</p>';
         return;
       }
 
@@ -430,52 +310,46 @@
         const imagen = p.imagen || 'https://picsum.photos/200';
 
         contenedor.innerHTML += `
-          <div class="product-card" style="background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+          <div class="product-card" style="background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px; display: flex; flex-direction: column; justify-content: space-between;">
             <div style="width: 100%; height: 160px; background: #f9f9f9; border-radius: 6px; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
-            <img src="${imagen}" alt="${nombre}" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+              <img src="${imagen}" alt="${nombre}" style="max-width: 100%; max-height: 100%; object-fit: contain;">
             </div>
             <div style="display: flex; flex-direction: column; gap: 8px;">
-              <a href="producto.html?id=${prodId}" style="text-align: center; background: #f3f4f6; color: #374151; padding: 8px; border-radius: 4px; text-decoration: none; font-size: 14px; font-weight: 500;">Ver Detalle</a>
-              <button onclick='agregarAlCarrito(${JSON.stringify(p)})' style="background: #2563eb; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: 500;">Agregar al Carrito</button>
+              <h3 style="font-size: 15px; font-weight: 600; color: #1f2937; margin: 0;">${nombre}</h3>
+              <p style="font-size: 16px; font-weight: bold; color: #16a34a; margin: 0;">S/ ${precio}</p>
+              <a href="producto.html?id=${prodId}" style="text-align: center; background: #f3f4f6; color: #374151; padding: 8px; border-radius: 4px; text-decoration: none; font-size: 14px;">Ver Detalle</a>
+              <button onclick='agregarAlCarrito(${JSON.stringify(p)})' style="background: #2563eb; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer; font-size: 14px;">Agregar al Carrito</button>
             </div>
           </div>
         `;
       });
     }
 
-    // 4. Filtrar productos por categoría externa
+    // Solución para que el filtrado del menú lateral responda correctamente
     window.filtrarPorCategoriaExterna = function(categoria) {
       categoriaActualSeleccionada = categoria;
       const tituloSeccion = document.getElementById('titulo-seccion-catalogo');
       
-      if (categoria === 'Todas') {
+      if (categoria === 'Todas' || categoria === 'Todas las categorías') {
         if (tituloSeccion) tituloSeccion.textContent = 'Productos Disponibles';
         renderizarProductos(todosLosProductos);
       } else {
         if (tituloSeccion) tituloSeccion.textContent = `Categoría: ${categoria}`;
-        const filtrados = todosLosProductos.filter(p => p.categoria === categoria);
+        const filtrados = todosLosProductos.filter(p => p.categoria && p.categoria.toLowerCase() === categoria.toLowerCase());
         renderizarProductos(filtrados);
       }
     };
 
-    // 5. Sistema básico de Carrito Local
-    function obtenerCarritoLocal() {
-      return JSON.parse(localStorage.getItem('carrito')) || [];
-    }
-
-    function guardarCarritoLocal(carrito) {
-      localStorage.setItem('carrito', JSON.stringify(carrito));
-      actualizarContadorCarrito();
-    }
+    function obtenerCarritoLocal() { return JSON.parse(localStorage.getItem('carrito')) || []; }
+    function guardarCarritoLocal(carrito) { localStorage.setItem('carrito', JSON.stringify(carrito)); actualizarContadorCarrito(); }
 
     window.agregarAlCarrito = function(producto) {
       let carrito = obtenerCarritoLocal();
       const prodId = producto.id;
       const index = carrito.findIndex(item => item.id === prodId);
 
-      if (index > -1) {
-        carrito[index].cantidad += 1;
-      } else {
+      if (index > -1) { carrito[index].cantidad += 1; } 
+      else {
         carrito.push({
           id: prodId,
           nombre: producto.nombre || producto.name,
@@ -484,7 +358,6 @@
           imagen: producto.imagen
         });
       }
-
       guardarCarritoLocal(carrito);
       alert('¡Producto agregado al carrito!');
     };
@@ -496,14 +369,14 @@
       if (badge) badge.textContent = totalItems;
     }
 
-    function renderizarModalCarrito() {
+function renderizarModalCarrito() {
       const carrito = obtenerCarritoLocal();
       const contenedorItems = document.getElementById('cart-items');
       const contenedorTotal = document.getElementById('cart-total-price');
 
       if (!contenedorItems) return;
 
-      if (carrito.length === 0) {
+      if (!carrito || carrito.length === 0) {
         contenedorItems.innerHTML = '<p style="color: #666; text-align: center; padding: 20px;">Tu carrito está vacío.</p>';
         if (contenedorTotal) contenedorTotal.textContent = '0.00';
         return;
@@ -513,13 +386,17 @@
       let total = 0;
 
       carrito.forEach((item, idx) => {
-        const subtotal = item.precio * item.cantidad;
+        // Blindaje contra precios o cantidades undefined/nulas
+        const precioUnitario = Number(item.precio || item.price || 0);
+        const cantidadItem = Number(item.cantidad || 1);
+        const subtotal = precioUnitario * cantidadItem;
         total += subtotal;
+
         html += `
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 8px;">
             <div>
-              <h4 style="margin: 0; font-size: 14px;">${item.nombre}</h4>
-              <small style="color: #666;">S/ ${item.precio.toFixed(2)} x ${item.cantidad}</small>
+              <h4 style="margin: 0; font-size: 14px;">${item.nombre || item.title || 'Producto'}</h4>
+              <small style="color: #666;">S/ ${precioUnitario.toFixed(2)} x ${cantidadItem}</small>
             </div>
             <div>
               <button onclick="cambiarCantidadCarrito(${idx}, 1)" style="padding: 2px 6px; cursor: pointer;">+</button>
@@ -536,35 +413,16 @@
     window.cambiarCantidadCarrito = function(index, delta) {
       let carrito = obtenerCarritoLocal();
       carrito[index].cantidad += delta;
-      if (carrito[index].cantidad <= 0) {
-        carrito.splice(index, 1);
-      }
+      if (carrito[index].cantidad <= 0) carrito.splice(index, 1);
       guardarCarritoLocal(carrito);
       renderizarModalCarrito();
     };
 
-    // 6. Lógica de Búsqueda en tiempo real
-    function configurarBuscador() {
-      const inputBuscar = document.getElementById('input-buscar');
-      if (!inputBuscar) return;
-
-      inputBuscar.addEventListener('input', (e) => {
-        const termino = e.target.value.toLowerCase().trim();
-        const filtrados = todosLosProductos.filter(p => {
-          const nombre = (p.nombre || p.name || '').toLowerCase();
-          const categoria = (p.categoria || '').toLowerCase();
-          return nombre.includes(termino) || categoria.includes(termino);
-        });
-        renderizarProductos(filtrados);
-      });
-    }
-
-    // Cargar dinámicamente las categorías en el menú lateral
+    // Cargar categorías dinámicamente al menú lateral
     async function cargarMenuLateralCategorias() {
       try {
         const res = await fetch('/api/categorias');
         const categorias = await res.json();
-        
         const listaCategorias = document.getElementById('side-category-list');
         if (!listaCategorias) return;
 
@@ -589,198 +447,77 @@
     }
 
     function seleccionarCategoriaMenu(categoria) {
-      if (typeof window.filtrarPorCategoriaExterna === 'function') {
-        window.filtrarPorCategoriaExterna(categoria);
-      }
+      filtrarPorCategoriaExterna(categoria);
       toggleMenuLateral(false);
     }
 
     function toggleMenuLateral(abrir) {
       const menu = document.getElementById('side-menu');
       const overlay = document.getElementById('side-menu-overlay');
-      if (abrir) {
-        menu.classList.add('active');
-        overlay.classList.add('active');
-      } else {
-        menu.classList.remove('active');
-        overlay.classList.remove('active');
+      if (abrir) { menu.classList.add('active'); overlay.classList.add('active'); } 
+      else { menu.classList.remove('active'); overlay.classList.remove('active'); }
+    }
+
+    function abrirModalAuth() { document.getElementById('auth-modal').style.display = 'flex'; }
+    function cerrarModalAuth() { document.getElementById('auth-modal').style.display = 'none'; }
+    function mostrarFormularioEmail() {
+      const contenedor = document.getElementById('email-login-form-container');
+      contenedor.style.display = contenedor.style.display === 'none' ? 'block' : 'none';
+    }
+
+    async function manejarLoginBackend(e) {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+      try {
+        const userCredential = await auth.signInWithEmailAndPassword(email, password);
+        const user = userCredential.user;
+        const usuarioData = { id: user.uid, nombre: user.displayName || email.split('@')[0], email: user.email };
+        localStorage.setItem('usuario', JSON.stringify(usuarioData));
+        cerrarModalAuth();
+        window.location.reload();
+      } catch (error) {
+        alert('Error: ' + error.message);
       }
     }
 
-    // Funciones de control del Modal de Autenticación
-    function abrirModalAuth() {
-        document.getElementById('auth-modal').style.display = 'flex';
-        verificarCuentaGuardadaModal();
-    }
-
-    function cerrarModalAuth() {
-        document.getElementById('auth-modal').style.display = 'none';
-    }
-
-    function verificarCuentaGuardadaModal() {
-        const usuarioGuardado = JSON.parse(localStorage.getItem('usuario'));
-        if (usuarioGuardado && usuarioGuardado.nombre) {
-            document.getElementById('auth-user-name-modal').textContent = usuarioGuardado.nombre;
-            document.getElementById('auth-user-email-modal').textContent = usuarioGuardado.email;
-            document.getElementById('auth-user-initial-modal').textContent = usuarioGuardado.nombre.charAt(0).toUpperCase();
-        }
-    }
-
-    function mostrarFormularioEmail() {
-        const contenedor = document.getElementById('email-login-form-container');
-        contenedor.style.display = contenedor.style.display === 'none' ? 'block' : 'none';
-    }
-
-    // 7. INICIAR SESIÓN / REGISTRO REAL CON FIREBASE AUTH
-    async function manejarLoginBackend(e) {
-        e.preventDefault();
-        const email = document.getElementById('login-email').value;
-        const password = document.getElementById('login-password').value;
-
-        try {
-            // Intentar iniciar sesión en Firebase
-            const userCredential = await auth.signInWithEmailAndPassword(email, password);
-            const user = userCredential.user;
-            const token = await user.getIdToken();
-
-            const usuarioData = {
-                id: user.uid,
-                nombre: user.displayName || email.split('@')[0],
-                email: user.email
-            };
-
-            localStorage.setItem('usuario', JSON.stringify(usuarioData));
-            localStorage.setItem('token', token);
-
-            alert(`¡Bienvenido de nuevo, ${usuarioData.nombre}!`);
-            cerrarModalAuth();
-            window.location.reload();
-
-        } catch (error) {
-            console.error('Error al iniciar sesión con Firebase:', error.message);
-            
-            // Si el usuario no existe, lo registramos automáticamente en Firebase
-            if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
-                try {
-                    const newUserCredential = await auth.createUserWithEmailAndPassword(email, password);
-                    const newUser = newUserCredential.user;
-                    const token = await newUser.getIdToken();
-
-                    const usuarioData = {
-                        id: newUser.uid,
-                        nombre: email.split('@')[0],
-                        email: newUser.email
-                    };
-
-                    localStorage.setItem('usuario', JSON.stringify(usuarioData));
-                    localStorage.setItem('token', token);
-
-                    alert(`¡Cuenta creada y sesión iniciada con éxito, ${usuarioData.nombre}!`);
-                    cerrarModalAuth();
-                    window.location.reload();
-                } catch (regError) {
-                    alert('Error al registrar usuario: ' + regError.message);
-                }
-            } else {
-                alert('Error al iniciar sesión: ' + error.message);
-            }
-        }
-    }
-
-    function eliminarCuentaGuardada() {
-        localStorage.removeItem('usuario');
-        localStorage.removeItem('token');
-        alert('Cuenta eliminada del historial del navegador.');
-        verificarCuentaGuardadaModal();
-    }
-
-    // Lógica integrada para procesar el pago
     async function procesarPagoCheckout() {
       const usuario = JSON.parse(localStorage.getItem('usuario'));
       const carrito = JSON.parse(localStorage.getItem('carrito')) || [];
-
-      if (!usuario) {
-        alert('Debes iniciar sesión para realizar una compra.');
-        abrirModalAuth();
-        return;
-      }
-
-      if (carrito.length === 0) {
-        alert('Tu carrito está vacío.');
-        return;
-      }
+      if (!usuario) { abrirModalAuth(); return; }
+      if (carrito.length === 0) { alert('Carrito vacío.'); return; }
 
       const montoTotal = carrito.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
-
       try {
         await fetch('/api/pedidos', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            usuario_id: usuario.id,
-            paypal_order_id: 'MP-' + Math.floor(Math.random() * 1000000),
-            monto: montoTotal,
-            items: carrito
-          })
+          body: JSON.stringify({ usuario_id: usuario.id, paypal_order_id: 'MP-' + Date.now(), monto: montoTotal, items: carrito })
         });
-
         const response = await fetch('/api/crear-preferencia', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            items: carrito,
-            usuario_id: usuario.id
-          })
+          body: JSON.stringify({ items: carrito, usuario_id: usuario.id })
         });
-
         const data = await response.json();
-
-        if (data.init_point) {
-          localStorage.removeItem('carrito');
-          window.location.href = data.init_point;
-        } else {
-          alert('No se pudo generar el enlace de pago.');
-        }
-
-      } catch (error) {
-        console.error('Error procesando el pago:', error);
-        alert('Ocurrió un error al procesar tu compra.');
-      }
+        if (data.init_point) { localStorage.removeItem('carrito'); window.location.href = data.init_point; }
+      } catch (error) { console.error(error); }
     }
 
     document.addEventListener('DOMContentLoaded', () => {
       verificarSesionUsuario();
       cargarProductosTienda();
       cargarMenuLateralCategorias();
-      configurarBuscador();
       actualizarContadorCarrito();
 
-      const btnMenu = document.getElementById('btn-menu-lateral');
-      const btnClose = document.getElementById('btn-close-side-menu');
-      const overlay = document.getElementById('side-menu-overlay');
+      document.getElementById('btn-menu-lateral')?.addEventListener('click', () => toggleMenuLateral(true));
+      document.getElementById('btn-close-side-menu')?.addEventListener('click', () => toggleMenuLateral(false));
+      document.getElementById('side-menu-overlay')?.addEventListener('click', () => toggleMenuLateral(false));
 
-      btnMenu?.addEventListener('click', () => toggleMenuLateral(true));
-      btnClose?.addEventListener('click', () => toggleMenuLateral(false));
-      overlay?.addEventListener('click', () => toggleMenuLateral(false));
-
-      // Modal Carrito Eventos
-      const btnCart = document.getElementById('btn-cart');
       const cartModal = document.getElementById('cart-modal');
-      const btnCloseCart = document.getElementById('btn-close-cart');
-
-      btnCart?.addEventListener('click', () => {
-        renderizarModalCarrito();
-        cartModal.classList.remove('hidden');
-      });
-
-      btnCloseCart?.addEventListener('click', () => {
-        cartModal.classList.add('hidden');
-      });  
-
-      const btnCheckout = document.getElementById('btn-checkout');
-      if (btnCheckout) {
-        btnCheckout.onclick = procesarPagoCheckout;
-      }      
+      document.getElementById('btn-cart')?.addEventListener('click', () => { renderizarModalCarrito(); cartModal.classList.remove('hidden'); });
+      document.getElementById('btn-close-cart')?.addEventListener('click', () => cartModal.classList.add('hidden'));
+      document.getElementById('btn-checkout')?.addEventListener('click', procesarPagoCheckout);
     });
   </script>
 </body>

@@ -5,7 +5,7 @@
   <title>Panel de Administración - Tienda</title>
   <style>
     body { font-family: system-ui, sans-serif; background: #f4f6f9; margin: 0; padding: 20px; }
-    .container { max-width: 1000px; margin: 0 auto; }
+    .container { max-width: 1150px; margin: 0 auto; }
     .card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
     h2 { margin-top: 0; color: #333; }
     table { width: 100%; border-collapse: collapse; margin-top: 15px; }
@@ -16,6 +16,8 @@
     .btn { background: #28a745; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; margin-top: 10px; }
     .btn-warning { background: #ffc107; color: #212529; margin-top: 0; margin-right: 5px; }
     .btn-danger { background: #dc3545; margin-top: 0; }
+    .btn-ws { background: #25d366; color: white; border: none; padding: 6px 10px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: bold; display: inline-flex; align-items: center; gap: 4px; }
+    .btn-ws:hover { background: #1eb854; }
     .btn-back { display: inline-block; margin-bottom: 15px; text-decoration: none; color: #007bff; font-weight: bold; }
     .img-preview { width: 50px; height: 50px; object-fit: cover; border-radius: 4px; }
 
@@ -24,13 +26,15 @@
     .modal-content { background: white; padding: 25px; border-radius: 8px; width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto; position: relative; }
     .close-modal { position: absolute; top: 10px; right: 15px; font-size: 24px; cursor: pointer; font-weight: bold; color: #aaa; }
     .close-modal:hover { color: #000; }
+    
+    .badge-doc { background: #e9ecef; padding: 4px 8px; border-radius: 4px; font-size: 13px; font-weight: bold; color: #333; }
   </style>
 </head>
 <body>
 
 <div class="container">
   <a href="/" class="btn-back">← Volver a la Tienda</a>
-  <h1>Panel de Control (Backoffice)</h1>
+  <h1>Panel de Control - Envíos Perú 🇵🇪</h1>
 
   <!-- Formulario Nuevo Producto -->
   <div class="card">
@@ -46,7 +50,7 @@
       <input type="number" id="stock" name="stock" placeholder="Stock inicial" required>
 
       <label for="categoria">Categoría:</label>
-      <input type="text" id="categoria" name="categoria" placeholder="Ej. Ropa, Calzado, Accesorios">
+      <input type="text" id="categoria" name="categoria" placeholder="Ej. Ropa, Calzado, Tecnología">
 
       <label for="imagen">Imagen desde PC / Galería:</label>
       <input type="file" id="imagen" name="imagen" accept="image/*">
@@ -74,16 +78,18 @@
     </table>
   </div>
 
-  <!-- Registro Global de Ventas -->
+  <!-- Registro Global de Ventas y Envíos Perú -->
   <div class="card">
-    <h2>Ventas Realizadas</h2>
+    <h2>Pedidos y Lugares de Entrega (Envíos Perú)</h2>
     <table>
       <thead>
         <tr>
           <th># Orden</th>
-          <th>Cliente</th>
-          <th>Monto</th>
-          <th>Fecha</th>
+          <th>Cliente / Contacto</th>
+          <th>Boleta/Factura</th>
+          <th>Lugar de Entrega (Perú)</th>
+          <th>Total</th>
+          <th>Acciones</th>
         </tr>
       </thead>
       <tbody id="tabla-ventas"></tbody>
@@ -123,27 +129,20 @@
   document.addEventListener('DOMContentLoaded', () => {
     cargarInventario();
     cargarVentas();
-
-    // Crear Producto con FormData
+    
     document.getElementById('form-producto').addEventListener('submit', async (e) => {
       e.preventDefault();
-      
+
       const formData = new FormData();
       formData.append('nombre', document.getElementById('nombre').value);
       formData.append('precio', document.getElementById('precio').value);
       formData.append('stock', document.getElementById('stock').value);
       formData.append('categoria', document.getElementById('categoria').value);
-      
+
       const archivo = document.getElementById('imagen').files[0];
-      if (archivo) {
-        formData.append('imagen', archivo);
-      }
+      if (archivo) formData.append('imagen', archivo);
 
-      const res = await fetch('/api/admin/productos', {
-        method: 'POST',
-        body: formData
-      });
-
+      const res = await fetch('/api/admin/productos', { method: 'POST', body: formData });
       if (res.ok) {
         e.target.reset();
         cargarInventario();
@@ -152,28 +151,21 @@
         alert('Error al guardar el producto');
       }
     });
-
-    // Guardar Edición de Producto con FormData
+    
     document.getElementById('form-editar-producto').addEventListener('submit', async (e) => {
       e.preventDefault();
       const id = document.getElementById('edit-id').value;
-      
+
       const formData = new FormData();
       formData.append('nombre', document.getElementById('edit-nombre').value);
       formData.append('precio', document.getElementById('edit-precio').value);
       formData.append('stock', document.getElementById('edit-stock').value);
       formData.append('categoria', document.getElementById('edit-categoria').value);
-      
+
       const archivoEdit = document.getElementById('edit-imagen').files[0];
-      if (archivoEdit) {
-        formData.append('imagen', archivoEdit);
-      }
+      if (archivoEdit) formData.append('imagen', archivoEdit);
 
-      const res = await fetch(`/api/admin/productos/${id}`, {
-        method: 'PUT',
-        body: formData
-      });
-
+      const res = await fetch(`/api/admin/productos/${id}`, { method: 'PUT', body: formData });
       if (res.ok) {
         alert('Producto actualizado correctamente');
         cerrarModal();
@@ -211,16 +203,16 @@
   async function abrirModalEditar(id) {
     const res = await fetch(`/api/admin/productos/${id}`);
     if (!res.ok) return alert('No se pudo cargar la información del producto');
-    
+
     const p = await res.json();
     document.getElementById('edit-id').value = p.id;
     document.getElementById('edit-nombre').value = p.nombre;
     document.getElementById('edit-precio').value = p.precio;
     document.getElementById('edit-stock').value = p.stock;
     document.getElementById('edit-categoria').value = p.categoria || 'General';
-    // Limpiamos el selector de archivo en el modal al abrirlo
+
     document.getElementById('edit-imagen').value = '';
-    
+
     document.getElementById('modal-editar').style.display = 'flex';
   }
 
@@ -241,16 +233,106 @@
     const tbody = document.getElementById('tabla-ventas');
     tbody.innerHTML = '';
 
+    if (!ventas || ventas.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#777;">No hay pedidos registrados aún.</td></tr>`;
+      return;
+    }
+
     ventas.forEach(v => {
+      let dir = {};
+      try {
+        dir = typeof v.direccion === 'string' ? JSON.parse(v.direccion) : (v.direccion || {});
+      } catch (e) {
+        dir = {};
+      }
+
+      const provincia = (dir.provincia || v.provincia || 'Coronel Portillo').trim();
+      const distrito = (dir.distrito || v.distrito || 'Yarinacocha').trim();
+      const direccionExacta = dir.direccion_exacta || v.direccion_exacta || 'Dirección registrada en tienda';
+      const codigoPostal = dir.codigo_postal || v.codigo_postal || '25001';
+      const telefono = dir.telefono || v.telefono || '929991971';
+
+      const tipoDoc = dir.tipo_documento || v.tipo_documento || 'DNI';
+      const numDoc = dir.numero_documento || v.numero_documento || v.dni || '72975291';
+
+      const esPucallpa = provincia.toLowerCase().includes('coronel portillo') || 
+                         distrito.toLowerCase().includes('yarinacocha') || 
+                         distrito.toLowerCase().includes('calleria') || 
+                         distrito.toLowerCase().includes('manantay') ||
+                         provincia.toLowerCase().includes('pucallpa');
+
+      const badgeTipoEnvio = esPucallpa 
+        ? `<span style="background: #d4edda; color: #155724; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;">🛵 Delivery Local (Pucallpa)</span>`
+        : `<span style="background: #cce5ff; color: #004085; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;">📦 Envío a Provincia / Agencia</span>`;
+
+      const numWs = telefono.replace(/\D/g, '');
+      const linkWhatsapp = `https://wa.me/51${numWs}?text=Hola%20${encodeURIComponent(v.usuario_nombre || 'Cliente')},%20te%20escribimos%20de%20la%20tienda%20sobre%20tu%20pedido%20%23${v.id}`;
+
       tbody.innerHTML += `
         <tr>
-          <td>#${v.id}</td>
-          <td>${v.usuario_nombre || 'Invitado'} (${v.email || 'N/A'})</td>
-          <td>S/ ${Number(v.monto).toFixed(2)}</td>
-          <td>${new Date(v.fecha).toLocaleString()}</td>
+          <td>
+            <strong>#${v.id}</strong><br><small>${new Date(v.fecha).toLocaleDateString()}</small><br>
+            ${badgeTipoEnvio}
+          </td>
+          <td>
+            <strong>${v.usuario_nombre || 'Cliente'}</strong><br>
+            📞 ${telefono} 
+            <a href="${linkWhatsapp}" target="_blank" class="btn-ws" title="Hablar por WhatsApp">💬 Contactar</a><br>
+            ✉️ <small>${v.email || 'N/A'}</small>
+          </td>
+          <td><span class="badge-doc">${tipoDoc}: ${numDoc}</span></td>
+          <td>
+            📍 <strong>${provincia} - ${distrito}</strong><br>
+            ${direccionExacta}<br>
+            <small>C. Postal: ${codigoPostal}</small>
+          </td>
+          <td><strong>S/ ${Number(v.monto).toFixed(2)}</strong></td>
+          <td>
+            <button class="btn btn-warning" onclick='verDetallePedido(${JSON.stringify(v)}, ${esPucallpa})' style="padding: 6px 10px; font-size: 12px;">📦 Ver Empaque</button>
+          </td>
         </tr>
       `;
     });
+  }
+
+  function verDetallePedido(pedido, esPucallpa) {
+    let productosArr = [];
+    try {
+      productosArr = typeof pedido.items === 'string' ? JSON.parse(pedido.items) : (pedido.items || pedido.productos || []);
+    } catch (e) {
+      productosArr = [];
+    }
+
+    let listadoProductos = productosArr.length > 0 
+      ? productosArr.map(p => `• ${p.nombre || p.title || 'Producto'} (x${p.cantidad || p.quantity || 1}) - S/ ${Number(p.precio || p.price || 0).toFixed(2)}`).join('\n')
+      : "• Productos generales de la orden";
+
+    let dir = {};
+    try {
+      dir = typeof pedido.direccion === 'string' ? JSON.parse(pedido.direccion) : (pedido.direccion || {});
+    } catch (e) {
+      dir = {};
+    }
+
+    const cliente = pedido.usuario_nombre || 'Cliente';
+    const tel = dir.telefono || pedido.telefono || '929991971';
+    const prov = dir.provincia || pedido.provincia || 'Coronel Portillo';
+    const dist = dir.distrito || pedido.distrito || 'Yarinacocha';
+    const calle = dir.direccion_exacta || pedido.direccion_exacta || 'Dirección de entrega';
+    const docType = dir.tipo_documento || pedido.tipo_documento || 'DNI';
+    const docNum = dir.numero_documento || pedido.numero_documento || '72975291';
+    
+    const tipoLogistica = esPucallpa 
+      ? "🛵 ENTREGA LOCAL (Manda motorizado o entrega en Pucallpa)" 
+      : "📦 ENVÍO NACIONAL (Empaquetar para agencia de transporte)";
+
+    alert(`${tipoLogistica} (Orden #${pedido.id})\n\n` +
+          `👤 Cliente: ${cliente}\n` +
+          `🆔 ${docType}: ${docNum}\n` +
+          `📞 Teléfono: ${tel}\n` +
+          `📍 Destino: ${prov}, ${dist} - ${calle}\n\n` +
+          `🛒 PRODUCTOS A EMPACAR:\n${listadoProductos}\n\n` +
+          `💰 Total Cobrado: S/ ${Number(pedido.monto).toFixed(2)}`);
   }
 </script>
 

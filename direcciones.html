@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Direcciones de Envío - RAIV</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDC1YoBAKkCgq81AKkzbmTwQ-zl_nBuyUQ",
+      authDomain: "mitiendavirtual-4d5bd.firebaseapp.com",
+      projectId: "mitiendavirtual-4d5bd",
+      storageBucket: "mitiendavirtual-4d5bd.firebasestorage.app",
+      messagingSenderId: "677793339948",
+      appId: "1:677793339948:web:88b76ddf0283701a914f89",
+      measurementId: "G-G01ZV8HYC3"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+  </script>
+
+  <style>
+    body { background-color: #f4f5f7; font-family: Arial, sans-serif; margin: 0; padding: 0; }
+    .main-wrapper { max-width: 900px; margin: 30px auto; padding: 0 15px; }
+    .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .page-title { font-size: 24px; font-weight: bold; color: #111; margin: 0; }
+    .security-sub { font-size: 13px; color: #00875a; display: flex; align-items: center; gap: 6px; margin-top: 4px; font-weight: 600; }
+    
+    .btn-orange { background: #ff6600; color: #fff; border: none; padding: 12px 22px; border-radius: 25px; font-size: 15px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; text-decoration: none; box-shadow: 0 2px 6px rgba(255,102,0,0.3); }
+    .btn-orange:hover { background: #e65c00; }
+
+    .address-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 15px; position: relative; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .address-info { font-size: 14px; color: #333; line-height: 1.6; }
+    .address-info strong { font-size: 15px; color: #111; }
+    
+    .address-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-top: 12px; border-top: 1px solid #f0f0f0; }
+    .radio-predeterminado { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #555; }
+    .address-actions { display: flex; gap: 15px; font-size: 13px; font-weight: 500; }
+    .address-actions button { background: none; border: none; color: #333; cursor: pointer; padding: 0; font-size: 13px; }
+    .address-actions button:hover { color: #ff6600; text-decoration: underline; }
+
+    /* Estilo Modal Temu */
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; }
+    .modal-content { background: #fff; width: 550px; max-width: 95%; max-height: 90vh; overflow-y: auto; border-radius: 12px; padding: 25px 30px; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+    .modal-close { position: absolute; top: 15px; right: 20px; background: none; border: none; font-size: 22px; cursor: pointer; color: #666; }
+    
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; font-size: 13px; font-weight: bold; color: #333; margin-bottom: 5px; }
+    .form-group label span { color: #dc2626; }
+    .form-control { width: 100%; padding: 10px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; box-sizing: border-box; background: #fff; }
+    .form-control:focus { border-color: #ff6600; outline: none; }
+    
+    .phone-group { display: flex; align-items: center; border: 1px solid #ccc; border-radius: 6px; overflow: hidden; background: #fff; }
+    .phone-prefix { background: #f3f4f6; padding: 10px 12px; font-size: 14px; color: #555; font-weight: bold; border-right: 1px solid #ccc; }
+    .phone-group input { border: none; flex: 1; padding: 10px 12px; font-size: 14px; outline: none; }
+
+    .aduana-options { display: flex; gap: 20px; margin-top: 5px; font-size: 13px; }
+    .btn-modal-save { width: 100%; background: #ff6600; color: #fff; border: none; padding: 12px; border-radius: 25px; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 15px; }
+    .btn-modal-save:hover { background: #e65c00; }
+    .btn-volver { display: inline-block; margin-bottom: 15px; color: #2563eb; text-decoration: none; font-size: 14px; font-weight: 500; }
+  </style>
+</head>
+<body>
+
+  <div class="main-wrapper">
+    <a href="index.html" class="btn-volver"><i class="fa-solid fa-arrow-left"></i> Volver a la tienda</a>
+    
+    <div class="header-top">
+      <div>
+        <h1 class="page-title">Direcciones</h1>
+        <div class="security-sub">
+          <i class="fa-solid fa-lock"></i> Todos los datos están protegidos
+        </div>
+      </div>
+      <button class="btn-orange" onclick="abrirModalDireccion()"><i class="fa-solid fa-plus"></i> Agregar una nueva dirección</button>
+    </div>
+
+    <!-- Contenedor de direcciones -->
+    <div id="lista-direcciones-container"></div>
+  </div>
+
+  <!-- MODAL ESTILO TEMU -->
+  <div id="modal-direccion" class="modal-overlay">
+    <div class="modal-content">
+      <button class="modal-close" onclick="cerrarModalDireccion()">&times;</button>
+      <h3 id="modal-titulo" style="margin-top:0; font-size: 18px; color: #111;">Agregar una nueva dirección</h3>
+      <div style="font-size: 12px; color: #00875a; font-weight: bold; margin-bottom: 15px;">
+        <i class="fa-solid fa-lock"></i> Todos los datos están protegidos
+      </div>
+
+      <form id="form-direccion-temu" onsubmit="guardarDireccionTemu(event)">
+        <input type="hidden" id="edit-index" value="-1">
+
+        <div class="form-group">
+          <label>País/región <span>*</span></label>
+          <select class="form-control" id="pais" required>
+            <option value="Perú" selected>Perú</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Nombre <span>*</span></label>
+          <input type="text" id="nombre" class="form-control" required placeholder="Tu nombre">
+        </div>
+
+        <div class="form-group">
+          <label>Apellido <span>*</span></label>
+          <input type="text" id="apellido" class="form-control" required placeholder="Tu apellido">
+        </div>
+
+        <div class="form-group">
+          <label>Dirección completa <span>*</span></label>
+          <input type="text" id="direccion_completa" class="form-control" required placeholder="Nombre de la calle, casa/departamento, suite, unidad, etc.">
+        </div>
+
+        <div class="form-group">
+          <label>Departamento <span>*</span></label>
+          <select class="form-control" id="departamento" required onchange="actualizarProvincias()">
+            <option value="">Seleccionar</option>
+            <option value="Ucayali">Ucayali</option>
+            <option value="Lima">Lima</option>
+            <option value="Arequipa">Arequipa</option>
+            <option value="La Libertad">La Libertad</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Provincia <span>*</span></label>
+          <select class="form-control" id="provincia" required onchange="actualizarDistritos()">
+            <option value="">Seleccionar</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Distrito <span>*</span></label>
+          <select class="form-control" id="distrito" required>
+            <option value="">Seleccionar</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Código postal <span>*</span></label>
+          <input type="text" id="codigo_postal" class="form-control" required placeholder="Ingresa 5 dígitos" maxlength="5">
+        </div>
+
+        <div class="form-group">
+          <label>Teléfono de contacto <span>*</span></label>
+          <div class="phone-group">
+            <span class="phone-prefix">PE +51</span>
+            <input type="tel" id="telefono" required placeholder="p. ej. 912345678" maxlength="9">
+          </div>
+          <div style="font-size: 11px; color: #00875a; margin-top: 4px;">
+            <i class="fa-solid fa-check-circle"></i> Tu número de teléfono se mantendrá seguro.
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Información de aduanas <span>*</span></label>
+          <div class="aduana-options">
+            <label><input type="radio" name="tipo_documento" value="DNI" checked> Número de DNI</label>
+            <label><input type="radio" name="tipo_documento" value="RUC"> Número RUC</label>
+          </div>
+          <div style="display: flex; gap: 10px; margin-top: 8px;">
+            <input type="text" id="numero_documento" class="form-control" required placeholder="Ingresa tu DNI o RUC" maxlength="11" style="flex: 1;">
+            <button type="button" onclick="verificarDocumentoReal()" style="background: #10b981; color: white; border: none; padding: 0 15px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px;">Validar</button>
+          </div>
+          <small id="resultado-validacion" style="display: block; margin-top: 5px; font-weight: bold;"></small>
+        </div>
+
+        <button type="submit" class="btn-modal-save">Guardar</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const datosPeru = {
+      "Ucayali": {
+        "Coronel Portillo": ["Pucallpa", "Yarinacocha", "Manantay", "Campo Verde"],
+        "Padre Abad": ["Aguaytía", "Huipoca"],
+        "Atalaya": ["Atalaya"]
+      },
+      "Lima": {
+        "Lima": ["Miraflores", "San Isidro", "Santiago de Surco", "Lima Cercado"]
+      }
+    };
+
+    function actualizarProvincias(provSeleccionada = "") {
+      const dep = document.getElementById('departamento').value;
+      const selectProv = document.getElementById('provincia');
+      const selectDist = document.getElementById('distrito');
+      
+      selectProv.innerHTML = '<option value="">Seleccionar</option>';
+      selectDist.innerHTML = '<option value="">Seleccionar</option>';
+
+      if (dep && datosPeru[dep]) {
+        Object.keys(datosPeru[dep]).forEach(prov => {
+          selectProv.innerHTML += `<option value="${prov}" ${prov === provSeleccionada ? 'selected' : ''}>${prov}</option>`;
+        });
+      }
+      if (provSeleccionada) actualizarDistritos();
+    }
+
+    function actualizarDistritos(distSeleccionado = "") {
+      const dep = document.getElementById('departamento').value;
+      const prov = document.getElementById('provincia').value;
+      const selectDist = document.getElementById('distrito');
+
+      selectDist.innerHTML = '<option value="">Seleccionar</option>';
+
+      if (dep && prov && datosPeru[dep][prov]) {
+        datosPeru[dep][prov].forEach(dist => {
+          selectDist.innerHTML += `<option value="${dist}" ${dist === distSeleccionado ? 'selected' : ''}>${dist}</option>`;
+        });
+      }
+    }
+
+    function obtenerUsuario() {
+      return auth.currentUser || JSON.parse(localStorage.getItem('usuario'));
+    }
+
+async function verificarDocumentoReal() {
+  const tipo = document.querySelector('input[name="tipo_documento"]:checked').value;
+  const numero = document.getElementById('numero_documento').value.trim();
+  const lblResultado = document.getElementById('resultado-validacion');
+  
+  // Obtenemos el usuario activo guardado en localStorage o sesión
+  const usuarioActual = JSON.parse(localStorage.getItem('usuarioLogueado')) || {};
+
+  if (!numero) {
+    alert("Por favor ingresa un número de documento.");
+    return;
+  }
+
+  lblResultado.style.color = "#666";
+  lblResultado.textContent = "Verificando identidad...";
+
+  try {
+    const res = await fetch('/api/verificar-documento', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        tipo, 
+        numero, 
+        emailUsuario: usuarioActual.email || "cruzemidiovaldez@gmail.com" // Aquí puedes pasar el email real de la sesión
+      })
+    });
+
+    const data = await res.json();
+
+    if (res.ok && data.valido) {
+      lblResultado.style.color = "#00875a";
+      lblResultado.textContent = data.mensaje;
+    } else {
+      lblResultado.style.color = "#dc2626";
+      lblResultado.textContent = data.mensaje || "Documento no válido.";
+    }
+  } catch (e) {
+    lblResultado.style.color = "#dc2626";
+    lblResultado.textContent = "Error al validar el documento.";
+  }
+}
+
+    function abrirModalDireccion(index = -1) {
+      document.getElementById('modal-direccion').style.display = 'flex';
+      document.getElementById('edit-index').value = index;
+      document.getElementById('resultado-validacion').textContent = '';
+      
+      if (index === -1) {
+        document.getElementById('modal-titulo').textContent = 'Agregar una nueva dirección';
+        document.getElementById('form-direccion-temu').reset();
+        document.getElementById('departamento').value = '';
+        document.getElementById('provincia').innerHTML = '<option value="">Seleccionar</option>';
+        document.getElementById('distrito').innerHTML = '<option value="">Seleccionar</option>';
+      } else {
+        document.getElementById('modal-titulo').textContent = 'Editar dirección';
+        const user = obtenerUsuario();
+        const userId = user ? (user.id || user.uid) : '';
+        let direcciones = JSON.parse(localStorage.getItem('direcciones_' + userId)) || [];
+        const dir = direcciones[index];
+        if (dir) {
+          document.getElementById('nombre').value = dir.nombre || '';
+          document.getElementById('apellido').value = dir.apellido || '';
+          document.getElementById('direccion_completa').value = dir.direccion_completa || '';
+          document.getElementById('departamento').value = dir.departamento || '';
+          actualizarProvincias(dir.provincia || '');
+          actualizarDistritos(dir.distrito || '');
+          document.getElementById('codigo_postal').value = dir.codigo_postal || '';
+          document.getElementById('telefono').value = dir.telefono || '';
+          document.getElementById('numero_documento').value = dir.numero_documento || '';
+          if(dir.tipo_documento) {
+            document.querySelector(`input[name="tipo_documento"][value="${dir.tipo_documento}"]`).checked = true;
+          }
+        }
+      }
+    }
+
+    function cerrarModalDireccion() {
+      document.getElementById('modal-direccion').style.display = 'none';
+    }
+
+    function cargarDirecciones() {
+      const user = obtenerUsuario();
+      const cont = document.getElementById('lista-direcciones-container');
+      if (!cont) return;
+
+      if (!user) {
+        cont.innerHTML = '<p style="color:#666;">Inicia sesión para ver tus direcciones guardadas.</p>';
+        return;
+      }
+      
+      const userId = user.id || user.uid;
+      let direcciones = JSON.parse(localStorage.getItem('direcciones_' + userId)) || [];
+
+      if (direcciones.length === 0) {
+        cont.innerHTML = '<div class="address-card" style="text-align:center; color:#666; padding: 40px;">No tienes direcciones registradas. Haz clic en "Agregar una nueva dirección" para empezar.</div>';
+        return;
+      }
+
+      let html = '';
+      direcciones.forEach((d, idx) => {
+        html += `
+          <div class="address-card">
+            <div class="address-info">
+              <strong>${d.nombre} ${d.apellido}</strong> +51 ${d.telefono}<br>
+              <strong style="text-transform: uppercase; display:inline-block; margin-top: 4px;">${d.direccion_completa}</strong><br>
+              ${d.distrito}, ${d.codigo_postal} ${d.provincia}, ${d.departamento}, ${d.pais}
+            </div>
+            <div class="address-footer">
+              <div class="radio-predeterminado">
+                <input type="radio" name="predeterminado" ${idx === 0 ? 'checked' : ''} onclick="alert('Dirección establecida como predeterminada')"> Predeterminado
+              </div>
+              <div class="address-actions">
+                <button onclick="eliminarDireccion(${idx})">Eliminar</button> | 
+                <button onclick="copiarDireccion(${idx})">Copiar</button> | 
+                <button onclick="abrirModalDireccion(${idx})">Editar</button>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+      cont.innerHTML = html;
+    }
+
+    function guardarDireccionTemu(e) {
+      e.preventDefault();
+      const user = obtenerUsuario();
+      if (!user) {
+        alert("Debes iniciar sesión.");
+        return;
+      }
+      const userId = user.id || user.uid;
+      const editIndex = parseInt(document.getElementById('edit-index').value);
+
+      const nueva = {
+        pais: document.getElementById('pais').value,
+        nombre: document.getElementById('nombre').value,
+        apellido: document.getElementById('apellido').value,
+        direccion_completa: document.getElementById('direccion_completa').value,
+        departamento: document.getElementById('departamento').value,
+        provincia: document.getElementById('provincia').value,
+        distrito: document.getElementById('distrito').value,
+        codigo_postal: document.getElementById('codigo_postal').value,
+        telefono: document.getElementById('telefono').value,
+        tipo_documento: document.querySelector('input[name="tipo_documento"]:checked').value,
+        numero_documento: document.getElementById('numero_documento').value
+      };
+
+      let direcciones = JSON.parse(localStorage.getItem('direcciones_' + userId)) || [];
+      
+      if (editIndex === -1) {
+        direcciones.push(nueva);
+      } else {
+        direcciones[editIndex] = nueva;
+      }
+
+      localStorage.setItem('direcciones_' + userId, JSON.stringify(direcciones));
+      cerrarModalDireccion();
+      cargarDirecciones();
+      alert("¡Dirección guardada correctamente!");
+    }
+
+    function eliminarDireccion(index) {
+      if (!confirm("¿Estás seguro de eliminar esta dirección?")) return;
+      const user = obtenerUsuario();
+      if (!user) return;
+      const userId = user.id || user.uid;
+
+      let direcciones = JSON.parse(localStorage.getItem('direcciones_' + userId)) || [];
+      direcciones.splice(index, 1);
+      localStorage.setItem('direcciones_' + userId, JSON.stringify(direcciones));
+      cargarDirecciones();
+    }
+
+    function copiarDireccion(index) {
+      const user = obtenerUsuario();
+      const userId = user ? (user.id || user.uid) : '';
+      let direcciones = JSON.parse(localStorage.getItem('direcciones_' + userId)) || [];
+      const d = direcciones[index];
+      if(d) {
+        const texto = `${d.nombre} ${d.apellido}, +51 ${d.telefono}, ${d.direccion_completa}, ${d.distrito}, ${d.provincia}, ${d.departamento}`;
+        navigator.clipboard.writeText(texto);
+        alert("¡Dirección copiada al portapapeles!");
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', cargarDirecciones);
+  </script>
+</body>
+</html>
