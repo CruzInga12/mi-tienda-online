@@ -649,4 +649,20 @@ button:hover {
     width: 100% !important;
     max-width: 100%;
   }
+
+  /* CORRECCIÓN: Menú desplegable de usuario alineado y adaptado en celular */
+  .user-dropdown-panel {
+    left: 0 !important;
+    right: auto !important;
+    width: 250px !important;
+    max-width: 90vw !important;
+  }
+
+  .header-actions {
+    gap: 8px !important;
+  }
+
+  .user-name-title {
+    max-width: 60px !important;
+  }
 }
