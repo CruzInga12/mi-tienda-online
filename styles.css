@@ -598,38 +598,53 @@ button:hover {
     ADAPTABILIDAD MÓVIL (RESPONSIVE)
     ========================================== */
 @media (max-width: 768px) {
-  /* Cuadrícula de productos a una sola columna */
-  .product-grid, .productos-grid, .grid-container {
-    grid-template-columns: 1fr !important;
-    padding: 10px;
-    gap: 1rem;
+  /* Contenedor general adaptado para celulares */
+  .container {
+    padding: 1rem;
+    width: 100%;
   }
 
-  /* Encabezado adaptable */
+  /* Cuadrícula de productos a dos columnas compactas o una según espacio */
+  .product-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px;
+    margin-top: 0.5rem;
+  }
+
+  /* Imagen de producto más proporcionada en móvil */
+  .product-card img {
+    height: 130px;
+  }
+
+  /* Encabezado adaptable en móvil */
   .header-container {
     flex-wrap: wrap;
-    gap: 10px;
-    padding: 8px 10px;
+    gap: 8px;
+    padding: 5px 0;
   }
 
-  /* Buscador en su propia línea en celulares */
+  /* Buscador pasa a su propia línea ocupando todo el ancho */
   .search-bar {
     order: 3;
     width: 100%;
-    margin-top: 5px;
+    margin-top: 4px;
   }
 
-  /* Ocultar ubicación para ganar espacio en pantallas muy chicas */
+  /* Ocultar ubicación para ahorrar espacio horizontal */
   .location-picker {
     display: none;
   }
 
-  /* Títulos más pequeños */
-  h1 {
-    font-size: 1.5rem;
+  /* Nombre de marca más compacto en celulares */
+  .brand-name {
+    font-size: 22px;
   }
 
-  /* Modal del carrito ocupando toda la pantalla */
+  .logo-img {
+    height: 45px;
+  }
+
+  /* Modal del carrito ocupando toda la pantalla en móvil */
   .cart-modal {
     width: 100% !important;
     max-width: 100%;
