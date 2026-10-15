@@ -7,7 +7,7 @@ const multer = require('multer');
 const db = require('./database');
 const { MercadoPagoConfig, Preference } = require('mercadopago');
 const { OAuth2Client } = require('google-auth-library');
-const { conectarWhatsApp, enviarAlertaWhatsApp } = require('./whatsapp-bot'); //[cite: 12]
+const { conectarWhatsApp, enviarAlertaWhatsApp } = require('./whatsapp-bot');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -59,6 +59,41 @@ app.get('/', (req, res) => {
 
 app.get('/producto.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'producto.html'));
+});
+
+// Ruta para procesar el Login del Administrador
+app.post('/api/login', express.json(), (req, res) => {
+  const { email, password } = req.body;
+  
+  db.get(`SELECT * FROM admins WHERE email = ? AND password = ?`, [email, password], (err, row) => {
+    if (err) {
+      return res.status(500).json({ success: false, message: "Error en el servidor" });
+    }
+    if (row) {
+      res.json({ success: true, message: "Bienvenido al panel" });
+    } else {
+      res.status(401).json({ success: false, message: "Correo o contraseña incorrectos" });
+    }
+  });
+});
+
+// Ruta para registrar un nuevo administrador (Opción B)
+app.post('/api/admin/registrar', express.json(), (req, res) => {
+  const { email, password } = req.body;
+  
+  if (!email || !password) {
+    return res.status(400).json({ success: false, message: "El correo y la contraseña son obligatorios" });
+  }
+
+  db.run(`INSERT INTO admins (email, password) VALUES (?, ?)`, [email, password], function(err) {
+    if (err) {
+      if (err.message.includes('UNIQUE')) {
+        return res.status(400).json({ success: false, message: "Este correo ya está registrado como administrador." });
+      }
+      return res.status(500).json({ success: false, message: "Error al registrar el administrador" });
+    }
+    res.status(201).json({ success: true, message: "Administrador agregado correctamente", id: this.lastID });
+  });
 });
 
 // 1. Obtener catálogo de productos

@@ -32,6 +32,15 @@
 </head>
 <body>
 
+<!-- Verificación de Seguridad para el Panel Admin -->
+<script>
+  const adminLogueado = localStorage.getItem('adminLogueado');
+  if (!adminLogueado) {
+      alert('Debes iniciar sesión para acceder al panel de administración.');
+      window.location.href = '/login.html';
+  }
+</script>
+
 <div class="container">
   <a href="/" class="btn-back">← Volver a la Tienda</a>
   <h1>Panel de Control - Envíos Perú 🇵🇪</h1>

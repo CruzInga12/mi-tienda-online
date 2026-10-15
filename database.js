@@ -25,6 +25,24 @@ db.serialize(() => {
     else console.log('👤 Tabla de usuarios verificada/creada correctamente.');
   });
 
+  // Tabla para administradores del panel (con admin inicial por defecto)
+  db.run(`CREATE TABLE IF NOT EXISTS admins (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT UNIQUE,
+    password TEXT
+  )`, (err) => {
+    if (err) console.error('Error al crear tabla admins:', err);
+    else {
+      console.log('🛡️ Tabla de administradores verificada/creada correctamente.');
+      db.get("SELECT COUNT(*) as count FROM admins", (countErr, row) => {
+        if (row && row.count === 0) {
+          db.run(`INSERT INTO admins (email, password) VALUES ('admin@tienda.com', '123456')`);
+          console.log('👑 Administrador por defecto creado (admin@tienda.com / 123456)');
+        }
+      });
+    }
+  });
+
   db.run(`CREATE TABLE IF NOT EXISTS productos (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nombre TEXT,
