@@ -37,9 +37,9 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-// Configuración de Mercado Pago SDK v3+
+// Configuración de Mercado Pago SDK v3+ (Token de producción configurado)
 const client = new MercadoPagoConfig({ 
-  accessToken: process.env.MP_ACCESS_TOKEN || 'APP_USR-2662506915333584-091523-2da72870661de58e6154a968b3beacad-3678396727' 
+  accessToken: process.env.MP_ACCESS_TOKEN || process.env.MERCADOPAGO_ACCESS_TOKEN || 'APP_USR-5958010329830678-091523-57d5cabea7c332d13b1f3592154a5d9c-3677734344' 
 });
 
 // Middlewares
@@ -422,9 +422,9 @@ app.post('/api/crear-preferencia', async (req, res) => {
         items: mpItems,
         external_reference: String(usuario_id || '1'),
         back_urls: {
-          success: "http://localhost:3000/historial.html?status=approved",
-          failure: "http://localhost:3000/index.html",
-          pending: "http://localhost:3000/index.html"
+          success: "https://tienda-online-cruz.onrender.com/historial.html?status=approved",
+          failure: "https://tienda-online-cruz.onrender.com/index.html",
+          pending: "https://tienda-online-cruz.onrender.com/index.html"
         }
       }
     });
@@ -522,7 +522,7 @@ app.post(['/api/pedidos', '/api/admin/pedidos'], (req, res) => {
       }
     });
 
-    // 📱 LISTA DE NÚMEROS DE LOS TRABAJADORES (Agrega o quita los que necesites)
+    // 📱 LISTA DE NÚMEROS DE LOS TRABAJADORES
     const numerosDestino = ["51929991971", "51987292038", "51949769145"];
     
     const detalleProductosText = productosArray.map(i => `• ${i.cantidad || i.quantity || 1}x ${i.nombre || i.title || 'Producto'}`).join('\n');
