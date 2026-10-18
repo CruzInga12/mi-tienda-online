@@ -1,4 +1,4 @@
-// whatsapp-bot.js - Con código de emparejamiento de 8 dígitos
+// whatsapp-bot.js - Con código de emparejamiento y visualización QR en Render
 const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } = require('@whiskeysockets/baileys');
 const readline = require('readline');
 
@@ -8,15 +8,16 @@ const pregunta = (texto) => new Promise((resolve) => rl.question(texto, resolve)
 let sock = null;
 
 async function conectarWhatsApp() {
-    const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys');
+    // Usamos 'auth_info_baileys_v2' para limpiar la sesión corrupta anterior
+    const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys_v2');
     
     sock = makeWASocket({
         auth: state,
-        printQRInTerminal: false // Desactivamos el QR para usar el código numérico directo
+        printQRInTerminal: true // Imprime el código QR en los logs de Render para escanear
     });
 
-    // Si no está registrado, pedimos el número para generar el código de 8 dígitos
-    if (!sock.authState.creds.registered) {
+    // Si no está registrado y existe consola interactiva local, solicita número
+    if (!sock.authState.creds.registered && process.stdin.isTTY) {
         const phoneNumber = await pregunta('\n📱 Ingresa tu número de WhatsApp con código de país (ej: 51929991971): ');
         const code = await sock.requestPairingCode(phoneNumber.trim());
         console.log(`\n✨ TU CÓDIGO DE VINCULACIÓN DE 8 DÍGITOS ES: --->  ${code}  <---\n`);
