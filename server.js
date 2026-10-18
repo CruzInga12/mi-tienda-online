@@ -397,7 +397,7 @@ app.put('/api/actualizar-password', (req, res) => {
   });
 });
 
-// 4. Crear preferencia de pago con Mercado Pago
+// 4. Crear preferencia de pago con Mercado Pago (Protección de Comisión Activada)
 app.post('/api/crear-preferencia', async (req, res) => {
   try {
     const body = req.body || {};
@@ -407,13 +407,20 @@ app.post('/api/crear-preferencia', async (req, res) => {
       return res.status(400).json({ error: 'El carrito está vacío' });
     }
 
-    const mpItems = items.map(item => ({
-      id: String(item.id),
-      title: String(item.nombre || item.title || 'Producto'),
-      quantity: Number(item.cantidad || item.quantity || 1),
-      unit_price: Number(item.precio || item.price || 0),
-      currency_id: 'PEN'
-    }));
+    const mpItems = items.map(item => {
+      const precioBase = Number(item.precio || item.price || 0);
+      const cantidad = Number(item.cantidad || item.quantity || 1);
+      // Aplicar recargo del 3.88% + S/ 1.18 proporcional para cubrir comisión de Mercado Pago
+      const precioAjustado = Number((precioBase * 1.0388 + (1.18 / cantidad)).toFixed(2));
+
+      return {
+        id: String(item.id),
+        title: String(item.nombre || item.title || 'Producto'),
+        quantity: cantidad,
+        unit_price: precioAjustado,
+        currency_id: 'PEN'
+      };
+    });
 
     const preference = new Preference(client);
     

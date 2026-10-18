@@ -138,6 +138,28 @@
       <div class="cart-content">
         <h2>Tu Carrito</h2>
         <div id="cart-items"></div>
+        
+        <!-- Método de Pago Optimizado para Ahorrar Comisiones -->
+        <div style="margin-top: 15px; background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
+          <label style="font-weight: bold; font-size: 14px; color: #334155; display: block; margin-bottom: 8px;">Método de Pago:</label>
+
+          <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; padding: 6px; background: #dcfce7; border-radius: 6px; margin-bottom: 6px; border: 1px solid #86efac;">
+            <input type="radio" name="metodoPagoCarrito" value="yape" checked onchange="toggleInfoPagoDirecto('yape')">
+            <span style="color: #166534; font-weight: bold;">Yape / Plin / Transferencia Directa (5% OFF)</span>
+          </label>
+
+          <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; padding: 6px; background: #fff; border-radius: 6px; border: 1px solid #cbd5e1;">
+            <input type="radio" name="metodoPagoCarrito" value="mercadopago" onchange="toggleInfoPagoDirecto('mercadopago')">
+            <span style="color: #1e293b;">Tarjeta Débito/Crédito (Mercado Pago)</span>
+          </label>
+
+          <div id="info-yape-modal" style="display: block; margin-top: 10px; background: #ffffff; padding: 10px; border-radius: 6px; border-left: 4px solid #16a34a; font-size: 12px;">
+            <p style="margin: 0 0 4px 0;">📲 <strong>Yape / Plin:</strong> <span style="font-size: 14px; font-weight: bold; color: #16a34a;">929 991 971</span></p>
+            <p style="margin: 0 0 4px 0;">👤 <strong>Titular:</strong> Cruz Emidio Inga Valdez</p>
+            <p style="margin: 0; color: #64748b;">Efectúa la transferencia con el monto final y envía tu captura para despacho directo.</p>
+          </div>
+        </div>
+
         <div class="cart-total" style="margin-top: 15px; font-size: 18px;">
           <strong>Total: S/ <span id="cart-total-price">0.00</span></strong>
         </div>
@@ -369,7 +391,15 @@
       if (badge) badge.textContent = totalItems;
     }
 
-function renderizarModalCarrito() {
+    function toggleInfoPagoDirecto(tipo) {
+      const infoBox = document.getElementById('info-yape-modal');
+      if (infoBox) {
+        infoBox.style.display = (tipo === 'yape') ? 'block' : 'none';
+      }
+      renderizarModalCarrito();
+    }
+
+    function renderizarModalCarrito() {
       const carrito = obtenerCarritoLocal();
       const contenedorItems = document.getElementById('cart-items');
       const contenedorTotal = document.getElementById('cart-total-price');
@@ -383,14 +413,13 @@ function renderizarModalCarrito() {
       }
 
       let html = '';
-      let total = 0;
+      let totalBase = 0;
 
       carrito.forEach((item, idx) => {
-        // Blindaje contra precios o cantidades undefined/nulas
         const precioUnitario = Number(item.precio || item.price || 0);
         const cantidadItem = Number(item.cantidad || 1);
         const subtotal = precioUnitario * cantidadItem;
-        total += subtotal;
+        totalBase += subtotal;
 
         html += `
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 8px;">
@@ -406,8 +435,11 @@ function renderizarModalCarrito() {
         `;
       });
 
+      const esYape = document.querySelector('input[name="metodoPagoCarrito"]:checked')?.value === 'yape';
+      const totalFinal = esYape ? totalBase * 0.95 : totalBase;
+
       contenedorItems.innerHTML = html;
-      if (contenedorTotal) contenedorTotal.textContent = total.toFixed(2);
+      if (contenedorTotal) contenedorTotal.textContent = totalFinal.toFixed(2);
     }
 
     window.cambiarCantidadCarrito = function(index, delta) {
@@ -487,12 +519,35 @@ function renderizarModalCarrito() {
       if (!usuario) { abrirModalAuth(); return; }
       if (carrito.length === 0) { alert('Carrito vacío.'); return; }
 
-      const montoTotal = carrito.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
+      const metodoElegido = document.querySelector('input[name="metodoPagoCarrito"]:checked')?.value || 'yape';
+      const montoTotalBase = carrito.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
+
+      if (metodoElegido === 'yape') {
+        const montoConDescuento = (montoTotalBase * 0.95).toFixed(2);
+        const numWhatsApp = "51929991971";
+        const mensajeWA = encodeURIComponent(
+          `¡Hola! Deseo completar mi compra por Yape/Plin.\n` +
+          `👤 Cliente: ${usuario.nombre}\n` +
+          `💵 Monto Total (con 5% OFF): S/ ${montoConDescuento}\n\n` +
+          `Adjunto la captura del pago realizado a Yape (929 991 971) para procesar el envío.`
+        );
+
+        await fetch('/api/pedidos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ usuario_id: usuario.id, paypal_order_id: 'YAPE-' + Date.now(), monto: montoConDescuento, items: carrito })
+        });
+
+        localStorage.removeItem('carrito');
+        window.location.href = `https://wa.me/${numWhatsApp}?text=${mensajeWA}`;
+        return;
+      }
+
       try {
         await fetch('/api/pedidos', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ usuario_id: usuario.id, paypal_order_id: 'MP-' + Date.now(), monto: montoTotal, items: carrito })
+          body: JSON.stringify({ usuario_id: usuario.id, paypal_order_id: 'MP-' + Date.now(), monto: montoTotalBase, items: carrito })
         });
         const response = await fetch('/api/crear-preferencia', {
           method: 'POST',
