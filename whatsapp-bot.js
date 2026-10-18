@@ -1,6 +1,7 @@
 // whatsapp-bot.js - Con código de emparejamiento y visualización QR en Render
 const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } = require('@whiskeysockets/baileys');
 const readline = require('readline');
+const qrcode = require('qrcode-terminal');
 
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 const pregunta = (texto) => new Promise((resolve) => rl.question(texto, resolve));
@@ -8,12 +9,12 @@ const pregunta = (texto) => new Promise((resolve) => rl.question(texto, resolve)
 let sock = null;
 
 async function conectarWhatsApp() {
-    // Usamos 'auth_info_baileys_v2' para limpiar la sesión corrupta anterior
-    const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys_v2');
+    // Usamos 'auth_info_baileys_v3' para limpiar la sesión corrupta anterior
+    const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys_v3');
     
     sock = makeWASocket({
         auth: state,
-        printQRInTerminal: true // Imprime el código QR en los logs de Render para escanear
+        printQRInTerminal: false
     });
 
     // Si no está registrado y existe consola interactiva local, solicita número
@@ -24,8 +25,15 @@ async function conectarWhatsApp() {
     }
 
     sock.ev.on('connection.update', (update) => {
-        const { connection, lastDisconnect } = update;
+        const { connection, lastDisconnect, qr } = update;
         
+        // Imprimir el código QR en los logs de Render si es necesario escanear
+        if (qr) {
+            console.log('\n================ ESCANEA ESTE CÓDIGO QR ================\n');
+            qrcode.generate(qr, { small: true });
+            console.log('\n=======================================================\n');
+        }
+
         if (connection === 'close') {
             const shouldReconnect = (lastDisconnect?.error)?.output?.statusCode !== DisconnectReason.loggedOut;
             console.log('❌ Conexión cerrada. Reconectando...', shouldReconnect);
