@@ -139,13 +139,13 @@
         <h2>Tu Carrito</h2>
         <div id="cart-items"></div>
         
-        <!-- Método de Pago Optimizado para Ahorrar Comisiones -->
+        <!-- Método de Pago Optimizado en Español Claro -->
         <div style="margin-top: 15px; background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
           <label style="font-weight: bold; font-size: 14px; color: #334155; display: block; margin-bottom: 8px;">Método de Pago:</label>
 
           <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; padding: 6px; background: #dcfce7; border-radius: 6px; margin-bottom: 6px; border: 1px solid #86efac;">
             <input type="radio" name="metodoPagoCarrito" value="yape" checked onchange="toggleInfoPagoDirecto('yape')">
-            <span style="color: #166534; font-weight: bold;">Yape / Plin / Transferencia Directa (5% OFF)</span>
+            <span style="color: #166534; font-weight: bold;">Yape / Plin / Transferencia Directa (5% de Descuento)</span>
           </label>
 
           <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; padding: 6px; background: #fff; border-radius: 6px; border: 1px solid #cbd5e1;">
@@ -528,7 +528,7 @@
         const mensajeWA = encodeURIComponent(
           `¡Hola! Deseo completar mi compra por Yape/Plin.\n` +
           `👤 Cliente: ${usuario.nombre}\n` +
-          `💵 Monto Total (con 5% OFF): S/ ${montoConDescuento}\n\n` +
+          `💵 Monto Total (con 5% de descuento): S/ ${montoConDescuento}\n\n` +
           `Adjunto la captura del pago realizado a Yape (929 991 971) para procesar el envío.`
         );
 
