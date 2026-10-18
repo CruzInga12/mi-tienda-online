@@ -5,12 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mi Tienda Virtual - RAIV</title>
   <link rel="stylesheet" href="styles.css">
-  <!-- Íconos FontAwesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- SDK oficial de Google Identity Services -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
-
-  <!-- SDKs y configuración de Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script>
@@ -29,30 +25,21 @@
 </head>
 
 <body>
+  <script type="text/javascript" src="https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js"></script>
 
-  <!-- SDK oficial de Apple Sign In -->
-  <script type="text/javascript" 
-  src="https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js">  
-  </script>
-
-  <!-- Encabezado Principal Integrado -->
   <header class="main-header">
     <div class="header-container">
-      
-      <!-- Menú Hamburguesa / Categorías -->
       <div class="menu-category-wrapper">
         <button id="btn-menu-lateral" class="menu-toggle" aria-label="Abrir menú de categorías">
           <i class="fa-solid fa-bars"></i>
         </button>
       </div>
 
-      <!-- Logo e Imagen de la Empresa -->
       <a href="/" class="logo-brand">
         <img src="logo.png" alt="Logo RAIV" class="logo-img" onerror="this.style.display='none'">
         <span class="brand-name">RAIV</span>
       </a>
 
-      <!-- Buscador Principal -->
       <div class="search-bar">
         <input type="text" id="input-buscar" placeholder="Buscar productos, marcas y más...">
         <button type="button" aria-label="Buscar">
@@ -63,9 +50,7 @@
         </button>
       </div>
 
-      <!-- Acciones de Usuario y Sesión -->
       <div class="header-actions">
-        
         <div class="user-menu-container" id="user-menu-wrapper" style="display: none;">
           <div class="user-trigger-btn">
             <div class="user-avatar-circle" id="user-initial">C</div>
@@ -110,25 +95,19 @@
           <span>Carrito</span>
         </button>
       </div>
-
     </div>
   </header>
 
-  <!-- MENÚ LATERAL DE CATEGORÍAS -->
   <div id="side-menu-overlay" class="side-menu-overlay"></div>
   <nav id="side-menu" class="side-menu">
     <div class="side-menu-header">
       <h3>Categorías</h3>
       <button id="btn-close-side-menu" class="close-side-menu">&times;</button>
     </div>
-    <ul id="side-category-list" class="side-category-list">
-      <!-- Se llenará dinámicamente -->
-    </ul>
+    <ul id="side-category-list" class="side-category-list"></ul>
   </nav>
 
-  <!-- Contenido Principal -->
   <main class="container" style="max-width: 1280px; margin: 25px auto; padding: 0 15px;">
-
     <section class="products-section">
       <h2 style="margin-bottom: 20px; font-size: 24px; color: #1f2937;" id="titulo-seccion-catalogo">Productos Disponibles</h2>
       <div id="product-list" class="product-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px;"></div>
@@ -139,13 +118,13 @@
         <h2>Tu Carrito</h2>
         <div id="cart-items"></div>
         
-        <!-- Método de Pago Optimizado en Español Claro -->
+        <!-- Método de Pago Rápido y Seguro -->
         <div style="margin-top: 15px; background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
           <label style="font-weight: bold; font-size: 14px; color: #334155; display: block; margin-bottom: 8px;">Método de Pago:</label>
 
           <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; padding: 6px; background: #dcfce7; border-radius: 6px; margin-bottom: 6px; border: 1px solid #86efac;">
             <input type="radio" name="metodoPagoCarrito" value="yape" checked onchange="toggleInfoPagoDirecto('yape')">
-            <span style="color: #166534; font-weight: bold;">Yape / Plin / Transferencia Directa (5% de Descuento)</span>
+            <span style="color: #166534; font-weight: bold;">Yape Directo (Cobro Automático Instantáneo)</span>
           </label>
 
           <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; padding: 6px; background: #fff; border-radius: 6px; border: 1px solid #cbd5e1;">
@@ -154,9 +133,10 @@
           </label>
 
           <div id="info-yape-modal" style="display: block; margin-top: 10px; background: #ffffff; padding: 10px; border-radius: 6px; border-left: 4px solid #16a34a; font-size: 12px;">
-            <p style="margin: 0 0 4px 0;">📲 <strong>Yape / Plin:</strong> <span style="font-size: 14px; font-weight: bold; color: #16a34a;">929 991 971</span></p>
-            <p style="margin: 0 0 4px 0;">👤 <strong>Titular:</strong> Cruz Emidio Inga Valdez</p>
-            <p style="margin: 0; color: #64748b;">Efectúa la transferencia con el monto final y envía tu captura para despacho directo.</p>
+            <p style="margin: 0 0 6px 0; color: #334155;">📱 <strong>Ingresa los datos de tu Yape:</strong></p>
+            <input type="text" id="yape-phone" placeholder="Número de celular de Yape" maxlength="9" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 6px; box-sizing: border-box;">
+            <input type="text" id="yape-otp" placeholder="Código de aprobación (6 dígitos)" maxlength="6" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 6px; box-sizing: border-box;">
+            <small style="color: #64748b; display: block;">Obtén el código de 6 dígitos dentro de tu app Yape en el menú <i>"Aprobar pago"</i>.</small>
           </div>
         </div>
 
@@ -169,14 +149,11 @@
         </div>
       </div>
     </aside>
-
   </main>
 
-  <!-- MODAL DE INICIO DE SESIÓN -->
   <div id="auth-modal" class="auth-modal-overlay" style="display: none;">
     <div class="auth-modal-container">
         <button class="auth-close-btn" onclick="cerrarModalAuth()">&times;</button>
-
         <div class="auth-header-security">
             <span><i class="fas fa-lock"></i> Todos los datos están protegidos</span>
         </div>
@@ -184,12 +161,8 @@
         <div class="auth-body-grid">
             <div class="auth-left-col">
                 <h3>Inicia sesión con una cuenta utilizada anteriormente</h3>
-                
                 <div id="buttonDivLeft" style="width: 100%; margin-bottom: 10px;"></div>
-
-                <button type="button" class="btn-brand-outline" onclick="mostrarFormularioEmail()">
-                    Utiliza otra forma de iniciar sesión
-                </button>
+                <button type="button" class="btn-brand-outline" onclick="mostrarFormularioEmail()">Utiliza otra forma de iniciar sesión</button>
             </div>
 
             <div class="auth-right-col">
@@ -221,7 +194,6 @@
 .auth-input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
 .btn-submit-backend { width: 100%; padding: 11px; background: #10b981; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
 
-/* Estilos funcionales para que el menú lateral responda correctamente al abrirse */
 .side-menu { position: fixed; top: 0; left: -300px; width: 300px; height: 100%; background: white; box-shadow: 4px 0 15px rgba(0,0,0,0.1); z-index: 10000; transition: left 0.3s ease; display: flex; flex-direction: column; }
 .side-menu.active { left: 0; }
 .side-menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; display: none; }
@@ -347,7 +319,6 @@
       });
     }
 
-    // Solución para que el filtrado del menú lateral responda correctamente
     window.filtrarPorCategoriaExterna = function(categoria) {
       categoriaActualSeleccionada = categoria;
       const tituloSeccion = document.getElementById('titulo-seccion-catalogo');
@@ -435,11 +406,8 @@
         `;
       });
 
-      const esYape = document.querySelector('input[name="metodoPagoCarrito"]:checked')?.value === 'yape';
-      const totalFinal = esYape ? totalBase * 0.95 : totalBase;
-
       contenedorItems.innerHTML = html;
-      if (contenedorTotal) contenedorTotal.textContent = totalFinal.toFixed(2);
+      if (contenedorTotal) contenedorTotal.textContent = totalBase.toFixed(2);
     }
 
     window.cambiarCantidadCarrito = function(index, delta) {
@@ -450,7 +418,6 @@
       renderizarModalCarrito();
     };
 
-    // Cargar categorías dinámicamente al menú lateral
     async function cargarMenuLateralCategorias() {
       try {
         const res = await fetch('/api/categorias');
@@ -523,23 +490,58 @@
       const montoTotalBase = carrito.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
 
       if (metodoElegido === 'yape') {
-        const montoConDescuento = (montoTotalBase * 0.95).toFixed(2);
-        const numWhatsApp = "51929991971";
-        const mensajeWA = encodeURIComponent(
-          `¡Hola! Deseo completar mi compra por Yape/Plin.\n` +
-          `👤 Cliente: ${usuario.nombre}\n` +
-          `💵 Monto Total (con 5% de descuento): S/ ${montoConDescuento}\n\n` +
-          `Adjunto la captura del pago realizado a Yape (929 991 971) para procesar el envío.`
-        );
+        const phone = document.getElementById('yape-phone').value.trim();
+        const otp = document.getElementById('yape-otp').value.trim();
 
-        await fetch('/api/pedidos', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ usuario_id: usuario.id, paypal_order_id: 'YAPE-' + Date.now(), monto: montoConDescuento, items: carrito })
-        });
+        if (!phone || phone.length !== 9) {
+          alert('Por favor, ingresa un número de teléfono válido de Yape (9 dígitos).');
+          return;
+        }
+        if (!otp || otp.length !== 6) {
+          alert('Por favor, ingresa el código de aprobación de Yape (6 dígitos).');
+          return;
+        }
 
-        localStorage.removeItem('carrito');
-        window.location.href = `https://wa.me/${numWhatsApp}?text=${mensajeWA}`;
+        const btn = document.getElementById('btn-checkout');
+        btn.disabled = true;
+        btn.textContent = 'Procesando con Yape...';
+
+        try {
+          const res = await fetch('/api/pagar-yape', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              phoneNumber: phone,
+              otp: otp,
+              items: carrito,
+              usuario_id: usuario.id,
+              email: usuario.email
+            })
+          });
+
+          const data = await res.json();
+
+          if (data.success) {
+            await fetch('/api/pedidos', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ usuario_id: usuario.id, paypal_order_id: 'YAPE-' + data.payment_id, monto: montoTotalBase, items: carrito })
+            });
+
+            localStorage.removeItem('carrito');
+            alert('¡Pago completado con éxito vía Yape!');
+            window.location.href = '/historial.html?status=approved';
+          } else {
+            alert('Error en el cobro: ' + (data.error || 'Código o saldo inválido.'));
+            btn.disabled = false;
+            btn.textContent = 'Pagar Ahora';
+          }
+        } catch (error) {
+          console.error(error);
+          alert('Ocurrió un error al procesar tu Yape.');
+          btn.disabled = false;
+          btn.textContent = 'Pagar Ahora';
+        }
         return;
       }
 
