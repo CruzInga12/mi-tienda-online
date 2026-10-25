@@ -122,8 +122,8 @@ app.get(['/api/productos/:id', '/api/admin/productos/:id', '/api/products/:id'],
   const { id } = req.params;
   try {
     const row = isProduction
-      ? (await db.execute({ sql: 'SELECT * FROM productos WHERE id = ?', args: [id] })).rows[0]
-      : (await db.query('SELECT * FROM productos WHERE id = ?', [id])).rows[0];
+      ? (await db.execute({ sql: 'SELECT * FROM productos WHERE id = ?', args: [Number(id)] })).rows[0]
+      : (await db.query('SELECT * FROM productos WHERE id = ?', [Number(id)])).rows[0];
 
     if (!row) return res.status(404).json({ error: 'Producto no encontrado' });
     res.json(row);
@@ -144,7 +144,7 @@ app.put(['/api/productos/:id', '/api/admin/productos/:id'], upload.single('image
   const query = imagenNueva 
     ? `UPDATE productos SET nombre = ?, precio = ?, stock = ?, categoria = ?, imagen = ? WHERE id = ?`
     : `UPDATE productos SET nombre = ?, precio = ?, stock = ?, categoria = ? WHERE id = ?`;
-  const params = imagenNueva ? [nombre, Number(precio), Number(stock), categoria, imagenNueva, id] : [nombre, Number(precio), Number(stock), categoria, id];
+  const params = imagenNueva ? [nombre, Number(precio), Number(stock), categoria, imagenNueva, Number(id)] : [nombre, Number(precio), Number(stock), categoria, Number(id)];
 
   try {
     isProduction ? await db.execute({ sql: query, args: params }) : await db.query(query, params);
@@ -432,7 +432,7 @@ app.post(['/api/pedidos', '/api/admin/pedidos'], async (req, res) => {
     for (let prod of productosArray) {
       if (prod.id) {
         const qStock = `UPDATE productos SET stock = MAX(0, stock - ?) WHERE id = ?`;
-        isProduction ? await db.execute({ sql: qStock, args: [Number(prod.cantidad || 1), prod.id] }) : await db.query(qStock, [Number(prod.cantidad || 1), prod.id]);
+        isProduction ? await db.execute({ sql: qStock, args: [Number(prod.cantidad || 1), Number(prod.id)] }) : await db.query(qStock, [Number(prod.cantidad || 1), Number(prod.id)]);
       }
     }
 
