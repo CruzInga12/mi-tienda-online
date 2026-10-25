@@ -1,9 +1,11 @@
-// server.js - Servidor Express con Turso Cloud (SQLite), Mercado Pago y WhatsApp
+// server.js - Servidor Express con Turso Cloud (SQLite), Mercado Pago, WhatsApp y Cloudinary
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const db = require('./database');
 const { MercadoPagoConfig, Preference, Payment } = require('mercadopago');
 const { OAuth2Client } = require('google-auth-library');
@@ -17,18 +19,21 @@ conectarWhatsApp();
 const GOOGLE_CLIENT_ID = '669620373732-8hbnn66m74as41kionmvrsb6440gma4i.apps.googleusercontent.com';
 const clientGoogle = new OAuth2Client(GOOGLE_CLIENT_ID);
 
-const uploadDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
+// Configuración de Cloudinary para imágenes y archivos
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'tienda_uploads',
+    allowed_formats: ['jpg', 'png', 'jpeg', 'webp', 'mp4', 'mov']
   }
 });
+
 const upload = multer({ storage: storage });
 
 const client = new MercadoPagoConfig({ 
@@ -41,7 +46,6 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(__dirname));
-app.use('/uploads', express.static(uploadDir));
 
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 app.get('/producto.html', (req, res) => res.sendFile(path.join(__dirname, 'producto.html')));
@@ -91,7 +95,7 @@ app.post(['/api/productos', '/api/admin/productos'], upload.single('imagen'), as
   const precio = body.precio || body.price || body.costo || 0;
   const stock = body.stock || body.cantidad || body.quantity || 0;
   const categoria = body.categoria || body.category || 'General';
-  const imagen = req.file ? `/uploads/${req.file.filename}` : (body.imagen || body.image || 'https://picsum.photos/150');
+  const imagen = req.file ? req.file.path : (body.imagen || body.image || 'https://picsum.photos/150');
 
   try {
     const query = `INSERT INTO productos (nombre, precio, stock, categoria, imagen) VALUES (?, ?, ?, ?, ?)`;
@@ -140,7 +144,7 @@ app.put(['/api/productos/:id', '/api/admin/productos/:id'], upload.single('image
   const stock = body.stock || body.quantity;
   const categoria = body.categoria || body.category || 'General';
 
-  let imagenNueva = req.file ? `/uploads/${req.file.filename}` : (body.imagen || body.image || null);
+  let imagenNueva = req.file ? req.file.path : (body.imagen || body.image || null);
   const query = imagenNueva 
     ? `UPDATE productos SET nombre = ?, precio = ?, stock = ?, categoria = ?, imagen = ? WHERE id = ?`
     : `UPDATE productos SET nombre = ?, precio = ?, stock = ?, categoria = ? WHERE id = ?`;
@@ -204,7 +208,7 @@ app.get('/api/reviews/user/:usuario_id', async (req, res) => {
 app.post('/api/reviews', upload.single('media'), async (req, res) => {
   const body = req.body || {};
   const { usuario_id, user_email, product_id, rating, comment } = body;
-  const media_url = req.file ? `/uploads/${req.file.filename}` : (body.media_url || null);
+  const media_url = req.file ? req.file.path : (body.media_url || null);
 
   const query = `INSERT INTO reviews (usuario_id, user_email, product_id, rating, comment, media_url) VALUES (?, ?, ?, ?, ?, ?)`;
   const params = [usuario_id || 1, user_email || 'cliente@tienda.com', product_id || 1, rating || 5, comment || '', media_url];
