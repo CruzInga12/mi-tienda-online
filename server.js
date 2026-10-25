@@ -1,4 +1,4 @@
-// server.js - Servidor Express con SQLite, Mercado Pago (Tarjetas + Yape Automático), Google OAuth y WhatsApp Local
+// server.js - Servidor Express con Turso Cloud (SQLite), Mercado Pago y WhatsApp
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -35,6 +35,8 @@ const client = new MercadoPagoConfig({
   accessToken: process.env.MP_ACCESS_TOKEN || process.env.MERCADOPAGO_ACCESS_TOKEN || 'APP_USR-5958010329830678-091523-57d5cabea7c332d13b1f3592154a5d9c-3677734344' 
 });
 
+const isProduction = process.env.TURSO_DATABASE_URL ? true : false;
+
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -44,36 +46,46 @@ app.use('/uploads', express.static(uploadDir));
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 app.get('/producto.html', (req, res) => res.sendFile(path.join(__dirname, 'producto.html')));
 
-app.post('/api/login', express.json(), (req, res) => {
+app.post('/api/login', express.json(), async (req, res) => {
   const { email, password } = req.body;
-  db.get(`SELECT * FROM admins WHERE email = ? AND password = ?`, [email, password], (err, row) => {
-    if (err) return res.status(500).json({ success: false, message: "Error en el servidor" });
+  try {
+    const row = isProduction 
+      ? (await db.execute({ sql: `SELECT * FROM admins WHERE email = ? AND password = ?`, args: [email, password] })).rows[0]
+      : (await db.query(`SELECT * FROM admins WHERE email = ? AND password = ?`, [email, password])).rows[0];
+
     if (row) res.json({ success: true, message: "Bienvenido al panel" });
     else res.status(401).json({ success: false, message: "Correo o contraseña incorrectos" });
-  });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: "Error en el servidor" });
+  }
 });
 
-app.post('/api/admin/registrar', express.json(), (req, res) => {
+app.post('/api/admin/registrar', express.json(), async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ success: false, message: "El correo y la contraseña son obligatorios" });
 
-  db.run(`INSERT INTO admins (email, password) VALUES (?, ?)`, [email, password], function(err) {
-    if (err) {
-      if (err.message.includes('UNIQUE')) return res.status(400).json({ success: false, message: "Este correo ya está registrado como administrador." });
-      return res.status(500).json({ success: false, message: "Error al registrar el administrador" });
-    }
-    res.status(201).json({ success: true, message: "Administrador agregado correctamente", id: this.lastID });
-  });
+  try {
+    const result = isProduction
+      ? await db.execute({ sql: `INSERT INTO admins (email, password) VALUES (?, ?)`, args: [email, password] })
+      : await db.query(`INSERT INTO admins (email, password) VALUES (?, ?)`, [email, password]);
+
+    res.status(201).json({ success: true, message: "Administrador agregado correctamente", id: result.insertId });
+  } catch (err) {
+    if (err.message.includes('UNIQUE')) return res.status(400).json({ success: false, message: "Este correo ya está registrado como administrador." });
+    return res.status(500).json({ success: false, message: "Error al registrar el administrador" });
+  }
 });
 
-app.get(['/api/productos', '/api/admin/productos'], (req, res) => {
-  db.all('SELECT * FROM productos', [], (err, rows) => {
-    if (err) return res.status(500).json({ error: 'Error al obtener productos' });
-    res.json(rows);
-  });
+app.get(['/api/productos', '/api/admin/productos'], async (req, res) => {
+  try {
+    const result = isProduction ? await db.execute('SELECT * FROM productos') : await db.query('SELECT * FROM productos');
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener productos' });
+  }
 });
 
-app.post(['/api/productos', '/api/admin/productos'], upload.single('imagen'), (req, res) => {
+app.post(['/api/productos', '/api/admin/productos'], upload.single('imagen'), async (req, res) => {
   const body = req.body || {};
   const nombre = body.nombre || body.name || body.titulo || body.productName || 'Producto sin nombre';
   const precio = body.precio || body.price || body.costo || 0;
@@ -81,31 +93,46 @@ app.post(['/api/productos', '/api/admin/productos'], upload.single('imagen'), (r
   const categoria = body.categoria || body.category || 'General';
   const imagen = req.file ? `/uploads/${req.file.filename}` : (body.imagen || body.image || 'https://picsum.photos/150');
 
-  const query = `INSERT INTO productos (nombre, precio, stock, categoria, imagen) VALUES (?, ?, ?, ?, ?)`;
-  db.run(query, [nombre, Number(precio), Number(stock), categoria, imagen], function (err) {
-    if (err) return res.status(500).json({ error: 'Error al registrar el producto en la base de datos' });
-    res.status(201).json({ mensaje: 'Producto guardado correctamente', id: this.lastID });
-  });
+  try {
+    const query = `INSERT INTO productos (nombre, precio, stock, categoria, imagen) VALUES (?, ?, ?, ?, ?)`;
+    const params = [nombre, Number(precio), Number(stock), categoria, imagen];
+    const result = isProduction ? await db.execute({ sql: query, args: params }) : await db.query(query, params);
+
+    res.status(201).json({ mensaje: 'Producto guardado correctamente', id: result.insertId });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al registrar el producto en la base de datos' });
+  }
 });
 
-app.delete(['/api/productos/:id', '/api/admin/productos/:id'], (req, res) => {
+app.delete(['/api/productos/:id', '/api/admin/productos/:id'], async (req, res) => {
   const { id } = req.params;
-  db.run('DELETE FROM productos WHERE id = ?', [id], function (err) {
-    if (err) return res.status(500).json({ error: 'Error al eliminar el producto' });
-    if (this.changes === 0) return res.status(404).json({ error: 'Producto no encontrado' });
+  try {
+    const result = isProduction
+      ? await db.execute({ sql: 'DELETE FROM productos WHERE id = ?', args: [id] })
+      : await db.query('DELETE FROM productos WHERE id = ?', [id]);
+
+    if (result.changes === 0) return res.status(404).json({ error: 'Producto no encontrado' });
     res.json({ mensaje: 'Producto eliminado correctamente', id });
-  });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al eliminar el producto' });
+  }
 });
 
-app.get(['/api/productos/:id', '/api/admin/productos/:id', '/api/products/:id'], (req, res) => {
+app.get(['/api/productos/:id', '/api/admin/productos/:id', '/api/products/:id'], async (req, res) => {
   const { id } = req.params;
-  db.get('SELECT * FROM productos WHERE id = ?', [id], (err, row) => {
-    if (err || !row) return res.status(404).json({ error: 'Producto no encontrado' });
+  try {
+    const row = isProduction
+      ? (await db.execute({ sql: 'SELECT * FROM productos WHERE id = ?', args: [id] })).rows[0]
+      : (await db.query('SELECT * FROM productos WHERE id = ?', [id])).rows[0];
+
+    if (!row) return res.status(404).json({ error: 'Producto no encontrado' });
     res.json(row);
-  });
+  } catch (err) {
+    res.status(404).json({ error: 'Producto no encontrado' });
+  }
 });
 
-app.put(['/api/productos/:id', '/api/admin/productos/:id'], upload.single('imagen'), (req, res) => {
+app.put(['/api/productos/:id', '/api/admin/productos/:id'], upload.single('imagen'), async (req, res) => {
   const { id } = req.params;
   const body = req.body || {};
   const nombre = body.nombre || body.name;
@@ -119,21 +146,27 @@ app.put(['/api/productos/:id', '/api/admin/productos/:id'], upload.single('image
     : `UPDATE productos SET nombre = ?, precio = ?, stock = ?, categoria = ? WHERE id = ?`;
   const params = imagenNueva ? [nombre, Number(precio), Number(stock), categoria, imagenNueva, id] : [nombre, Number(precio), Number(stock), categoria, id];
 
-  db.run(query, params, function (err) {
-    if (err) return res.status(500).json({ error: 'Error al actualizar el producto' });
+  try {
+    isProduction ? await db.execute({ sql: query, args: params }) : await db.query(query, params);
     res.json({ mensaje: 'Producto actualizado correctamente' });
-  });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al actualizar el producto' });
+  }
 });
 
-app.get(['/api/categorias', '/api/admin/categorias'], (req, res) => {
-  db.all('SELECT DISTINCT categoria FROM productos WHERE categoria IS NOT NULL AND categoria != ""', [], (err, rows) => {
-    if (err) return res.status(500).json({ error: 'Error al obtener categorías' });
-    res.json(rows.map(row => row.categoria));
-  });
+app.get(['/api/categorias', '/api/admin/categorias'], async (req, res) => {
+  try {
+    const result = isProduction
+      ? await db.execute('SELECT DISTINCT categoria FROM productos WHERE categoria IS NOT NULL AND categoria != ""')
+      : await db.query('SELECT DISTINCT categoria FROM productos WHERE categoria IS NOT NULL AND categoria != ""');
+
+    res.json(result.rows.map(row => row.categoria));
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener categorías' });
+  }
 });
 
-// Reseñas generales y por producto
-app.get(['/api/reviews', '/api/reviews/product/:product_id', '/api/reviews/:product_id'], (req, res) => {
+app.get(['/api/reviews', '/api/reviews/product/:product_id', '/api/reviews/:product_id'], async (req, res) => {
   const product_id = req.params.product_id || req.query.product_id;
   let query = 'SELECT * FROM reviews';
   let params = [];
@@ -142,14 +175,16 @@ app.get(['/api/reviews', '/api/reviews/product/:product_id', '/api/reviews/:prod
     params.push(product_id);
   }
   query += ' ORDER BY created_at DESC';
-  db.all(query, params, (err, rows) => {
-    if (err) return res.status(500).json({ error: 'Error al cargar opiniones' });
-    res.json(rows);
-  });
+
+  try {
+    const result = isProduction ? await db.execute({ sql: query, args: params }) : await db.query(query, params);
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al cargar opiniones' });
+  }
 });
 
-// NUEVO: Ruta específica para obtener reseñas por usuario (soluciona el error en reseñas.html)
-app.get('/api/reviews/user/:usuario_id', (req, res) => {
+app.get('/api/reviews/user/:usuario_id', async (req, res) => {
   const { usuario_id } = req.params;
   const query = `
     SELECT r.*, p.nombre as producto_nombre, p.imagen as producto_imagen 
@@ -158,47 +193,61 @@ app.get('/api/reviews/user/:usuario_id', (req, res) => {
     WHERE r.usuario_id = ? 
     ORDER BY r.created_at DESC
   `;
-  db.all(query, [usuario_id], (err, rows) => {
-    if (err) return res.status(500).json({ error: 'Error al obtener reseñas del usuario' });
-    res.json(rows);
-  });
+  try {
+    const result = isProduction ? await db.execute({ sql: query, args: [usuario_id] }) : await db.query(query, [usuario_id]);
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener reseñas del usuario' });
+  }
 });
 
-app.post('/api/reviews', upload.single('media'), (req, res) => {
+app.post('/api/reviews', upload.single('media'), async (req, res) => {
   const body = req.body || {};
   const { usuario_id, user_email, product_id, rating, comment } = body;
   const media_url = req.file ? `/uploads/${req.file.filename}` : (body.media_url || null);
 
   const query = `INSERT INTO reviews (usuario_id, user_email, product_id, rating, comment, media_url) VALUES (?, ?, ?, ?, ?, ?)`;
-  db.run(query, [usuario_id || 1, user_email || 'cliente@tienda.com', product_id || 1, rating || 5, comment || '', media_url], function(err) {
-    if (err) return res.status(500).json({ error: 'Error al guardar la reseña' });
-    res.status(201).json({ mensaje: 'Reseña publicada con éxito', id: this.lastID });
-  });
+  const params = [usuario_id || 1, user_email || 'cliente@tienda.com', product_id || 1, rating || 5, comment || '', media_url];
+
+  try {
+    const result = isProduction ? await db.execute({ sql: query, args: params }) : await db.query(query, params);
+    res.status(201).json({ mensaje: 'Reseña publicada con éxito', id: result.insertId });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al guardar la reseña' });
+  }
 });
 
-app.post('/api/register', (req, res) => {
+app.post('/api/register', async (req, res) => {
   const { nombre, email, password } = req.body || {};
   if (!nombre || !email || !password) return res.status(400).json({ error: 'Todos los campos son obligatorios.' });
 
   const query = `INSERT INTO usuarios (nombre, email, password) VALUES (?, ?, ?)`;
-  db.run(query, [nombre, email, password], function (err) {
-    if (err) {
-      if (err.message.includes('UNIQUE')) return res.status(400).json({ error: 'El correo electrónico ya está registrado.' });
-      return res.status(500).json({ error: 'Error al registrar usuario.' });
-    }
-    res.status(201).json({ mensaje: 'Usuario registrado con éxito', usuarioId: this.lastID });
-  });
+  const params = [nombre, email, password];
+
+  try {
+    const result = isProduction ? await db.execute({ sql: query, args: params }) : await db.query(query, params);
+    res.status(201).json({ mensaje: 'Usuario registrado con éxito', usuarioId: result.insertId });
+  } catch (err) {
+    if (err.message.includes('UNIQUE')) return res.status(400).json({ error: 'El correo electrónico ya está registrado.' });
+    return res.status(500).json({ error: 'Error al registrar usuario.' });
+  }
 });
 
-app.post('/api/login', (req, res) => {
+app.post('/api/login', async (req, res) => {
   const { email, password } = req.body || {};
-  db.get('SELECT * FROM usuarios WHERE email = ? AND password = ?', [email, password], (err, usuario) => {
-    if (err || !usuario) return res.status(401).json({ error: 'Credenciales incorrectas.' });
+  try {
+    const usuario = isProduction
+      ? (await db.execute({ sql: 'SELECT * FROM usuarios WHERE email = ? AND password = ?', args: [email, password] })).rows[0]
+      : (await db.query('SELECT * FROM usuarios WHERE email = ? AND password = ?', [email, password])).rows[0];
+
+    if (!usuario) return res.status(401).json({ error: 'Credenciales incorrectas.' });
     res.json({
       token: `fake-jwt-token-${usuario.id}`,
       usuario: { id: usuario.id, nombre: usuario.nombre, email: usuario.email, rol: usuario.rol, ciudad: usuario.ciudad || '', departamento: usuario.departamento || '' }
     });
-  });
+  } catch (err) {
+    res.status(401).json({ error: 'Credenciales incorrectas.' });
+  }
 });
 
 app.post('/api/auth/google', async (req, res) => {
@@ -209,41 +258,53 @@ app.post('/api/auth/google', async (req, res) => {
     const email = payload.email;
     const nombre = payload.name;
 
-    db.get('SELECT * FROM usuarios WHERE email = ?', [email], (err, usuario) => {
-      if (err) return res.status(500).json({ error: 'Error en la base de datos' });
-      if (usuario) {
-        return res.json({ token: `google-jwt-token-${usuario.id}`, usuario: { id: usuario.id, nombre: usuario.nombre, email: usuario.email, rol: usuario.rol, ciudad: usuario.ciudad || '', departamento: usuario.departamento || '' } });
-      } else {
-        db.run(`INSERT INTO usuarios (nombre, email, password) VALUES (?, ?, ?)`, [nombre, email, 'GOOGLE_AUTH_SECURE'], function(err) {
-          if (err) return res.status(500).json({ error: 'Error al registrar usuario de Google' });
-          return res.json({ token: `google-jwt-token-${this.lastID}`, usuario: { id: this.lastID, nombre, email, rol: 'cliente', ciudad: '', departamento: '' } });
-        });
-      }
-    });
+    const usuario = isProduction
+      ? (await db.execute({ sql: 'SELECT * FROM usuarios WHERE email = ?', args: [email] })).rows[0]
+      : (await db.query('SELECT * FROM usuarios WHERE email = ?', [email])).rows[0];
+
+    if (usuario) {
+      return res.json({ token: `google-jwt-token-${usuario.id}`, usuario: { id: usuario.id, nombre: usuario.nombre, email: usuario.email, rol: usuario.rol, ciudad: usuario.ciudad || '', departamento: usuario.departamento || '' } });
+    } else {
+      const insRes = isProduction
+        ? await db.execute({ sql: `INSERT INTO usuarios (nombre, email, password) VALUES (?, ?, ?)`, args: [nombre, email, 'GOOGLE_AUTH_SECURE'] })
+        : await db.query(`INSERT INTO usuarios (nombre, email, password) VALUES (?, ?, ?)`, [nombre, email, 'GOOGLE_AUTH_SECURE']);
+
+      return res.json({ token: `google-jwt-token-${insRes.insertId}`, usuario: { id: insRes.insertId, nombre, email, rol: 'cliente', ciudad: '', departamento: '' } });
+    }
   } catch (error) {
     res.status(401).json({ error: 'Token de Google inválido' });
   }
 });
 
-app.put('/api/actualizar-perfil', (req, res) => {
+app.put('/api/actualizar-perfil', async (req, res) => {
   const { id, nombre, ciudad, departamento } = req.body;
-  db.run(`UPDATE usuarios SET nombre = ?, ciudad = ?, departamento = ? WHERE id = ?`, [nombre, ciudad, departamento, id], function(err) {
-    if (err) return res.status(500).json({ error: err.message });
+  try {
+    const query = `UPDATE usuarios SET nombre = ?, ciudad = ?, departamento = ? WHERE id = ?`;
+    const params = [nombre, ciudad, departamento, id];
+    isProduction ? await db.execute({ sql: query, args: params }) : await db.query(query, params);
     res.json({ message: 'Perfil actualizado correctamente' });
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.put('/api/actualizar-password', (req, res) => {
+app.put('/api/actualizar-password', async (req, res) => {
   const { id, passwordActual, passwordNueva } = req.body;
-  db.get('SELECT * FROM usuarios WHERE id = ?', [id], (err, usuario) => {
-    if (err || !usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
+  try {
+    const usuario = isProduction
+      ? (await db.execute({ sql: 'SELECT * FROM usuarios WHERE id = ?', args: [id] })).rows[0]
+      : (await db.query('SELECT * FROM usuarios WHERE id = ?', [id])).rows[0];
+
+    if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
     if (usuario.password !== passwordActual) return res.status(400).json({ error: 'La contraseña actual es incorrecta' });
 
-    db.run('UPDATE usuarios SET password = ? WHERE id = ?', [passwordNueva, id], function(err) {
-      if (err) return res.status(500).json({ error: 'Error al actualizar la contraseña' });
-      res.json({ message: 'Contraseña actualizada correctamente' });
-    });
-  });
+    const qUp = 'UPDATE usuarios SET password = ? WHERE id = ?';
+    isProduction ? await db.execute({ sql: qUp, args: [passwordNueva, id] }) : await db.query(qUp, [passwordNueva, id]);
+
+    res.json({ message: 'Contraseña actualizada correctamente' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al actualizar la contraseña' });
+  }
 });
 
 app.post('/api/pagar-yape', async (req, res) => {
@@ -261,9 +322,7 @@ app.post('/api/pagar-yape', async (req, res) => {
         transaction_amount: Number(montoTotal.toFixed(2)),
         description: `Compra en Tienda RAIV - Usuario #${usuario_id}`,
         payment_method_id: 'yape',
-        payer: {
-          email: email || 'cliente@tienda.com',
-        },
+        payer: { email: email || 'cliente@tienda.com' },
         token: otp,
       }
     });
@@ -273,9 +332,7 @@ app.post('/api/pagar-yape', async (req, res) => {
     } else {
       res.status(400).json({ success: false, error: 'No se pudo procesar el pago con Yape. Revisa el saldo o el código ingresado.' });
     }
-
   } catch (error) {
-    console.error('Error al procesar pago Yape:', error);
     res.status(500).json({ error: error.message || 'Error interno al procesar con Yape.' });
   }
 });
@@ -315,34 +372,43 @@ app.post('/api/crear-preferencia', async (req, res) => {
 
     if (!result.init_point) return res.status(500).json({ error: 'No se pudo obtener la pasarela' });
     res.json({ id: result.id, init_point: result.init_point });
-
   } catch (error) {
     res.status(500).json({ error: error.message || 'Error en pasarela de pago' });
   }
 });
 
-app.get(['/api/pedidos/:usuario_id', '/api/admin/pedidos/:usuario_id', '/api/admin/pedidos'], (req, res) => {
+app.get(['/api/pedidos/:usuario_id', '/api/admin/pedidos/:usuario_id', '/api/admin/pedidos'], async (req, res) => {
   const { usuario_id } = req.params;
   const query = usuario_id 
     ? 'SELECT p.*, u.nombre as usuario_nombre, u.email FROM pedidos p LEFT JOIN usuarios u ON p.usuario_id = u.id WHERE p.usuario_id = ? ORDER BY p.fecha DESC'
     : 'SELECT p.*, u.nombre as usuario_nombre, u.email FROM pedidos p LEFT JOIN usuarios u ON p.usuario_id = u.id ORDER BY p.fecha DESC';
   
-  db.all(query, usuario_id ? [usuario_id] : [], (err, rows) => {
-    if (err) return res.status(500).json({ error: 'Error al consultar historial' });
-    res.json(rows);
-  });
+  try {
+    const result = isProduction 
+      ? await db.execute({ sql: query, args: usuario_id ? [usuario_id] : [] })
+      : await db.query(query, usuario_id ? [usuario_id] : []);
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al consultar historial' });
+  }
 });
 
-app.get('/api/pedido-detalle/:id', (req, res) => {
+app.get('/api/pedido-detalle/:id', async (req, res) => {
   const { id } = req.params;
-  db.get('SELECT * FROM pedidos WHERE id = ?', [id], (err, row) => {
-    if (err || !row) return res.status(404).json({ error: 'Pedido no encontrado' });
+  try {
+    const row = isProduction
+      ? (await db.execute({ sql: 'SELECT * FROM pedidos WHERE id = ?', args: [id] })).rows[0]
+      : (await db.query('SELECT * FROM pedidos WHERE id = ?', [id])).rows[0];
+
+    if (!row) return res.status(404).json({ error: 'Pedido no encontrado' });
     try { if (typeof row.items === 'string') row.items = JSON.parse(row.items); } catch (e) { row.items = []; }
     res.json(row);
-  });
+  } catch (err) {
+    res.status(404).json({ error: 'Pedido no encontrado' });
+  }
 });
 
-app.post(['/api/pedidos', '/api/admin/pedidos'], (req, res) => {
+app.post(['/api/pedidos', '/api/admin/pedidos'], async (req, res) => {
   const body = req.body || {};
   const { usuario_id, paypal_order_id, monto, items, direccion } = body;
   const itemsJSON = typeof items === 'string' ? items : JSON.stringify(items || []);
@@ -357,15 +423,18 @@ app.post(['/api/pedidos', '/api/admin/pedidos'], (req, res) => {
   }
 
   const query = `INSERT INTO pedidos (usuario_id, paypal_order_id, monto, items, direccion) VALUES (?, ?, ?, ?, ?)`;
-  db.run(query, [usuario_id || 1, paypal_order_id || 'MP-' + Date.now(), montoFinal, itemsJSON, direccionJSON], function (err) {
-    if (err) return res.status(500).json({ error: 'Error al registrar el pedido' });
+  const params = [usuario_id || 1, paypal_order_id || 'MP-' + Date.now(), montoFinal, itemsJSON, direccionJSON];
 
-    const pedidoId = this.lastID;
-    productosArray.forEach(prod => {
+  try {
+    const result = isProduction ? await db.execute({ sql: query, args: params }) : await db.query(query, params);
+    const pedidoId = result.insertId;
+
+    for (let prod of productosArray) {
       if (prod.id) {
-        db.run(`UPDATE productos SET stock = MAX(0, stock - ?) WHERE id = ?`, [Number(prod.cantidad || 1), prod.id]);
+        const qStock = `UPDATE productos SET stock = MAX(0, stock - ?) WHERE id = ?`;
+        isProduction ? await db.execute({ sql: qStock, args: [Number(prod.cantidad || 1), prod.id] }) : await db.query(qStock, [Number(prod.cantidad || 1), prod.id]);
       }
-    });
+    }
 
     const numerosDestino = ["51929991971", "51987292038", "51949769145"];
     const detalleProductosText = productosArray.map(i => `• ${i.cantidad || 1}x ${i.nombre || 'Producto'}`).join('\n');
@@ -384,7 +453,9 @@ ${detalleProductosText}
     });
 
     res.status(201).json({ mensaje: 'Pedido registrado correctamente', pedidoId });
-  });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al registrar el pedido' });
+  }
 });
 
 app.post('/api/verificar-documento', async (req, res) => {
@@ -396,29 +467,31 @@ app.post('/api/verificar-documento', async (req, res) => {
   if (tipo === 'RUC' && !/^\d{11}$/.test(docLimpio)) return res.status(400).json({ valido: false, mensaje: "El RUC debe tener 11 dígitos." });
 
   try {
-    db.get(`SELECT nombre FROM usuarios WHERE email = ?`, [emailUsuario], async (err, usuarioDB) => {
-      const normalizar = (texto) => (texto || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim();
-      const nombreCuenta = normalizar(usuarioDB ? usuarioDB.nombre : (nombreUsuario || ""));
+    const usuarioDB = isProduction
+      ? (await db.execute({ sql: `SELECT nombre FROM usuarios WHERE email = ?`, args: [emailUsuario] })).rows[0]
+      : (await db.query(`SELECT nombre FROM usuarios WHERE email = ?`, [emailUsuario])).rows[0];
 
-      const TOKEN_DECOLECTA = process.env.API_TOKEN_PERU || "sk_20486.C3Wm73CKbkdN7R1An76sPk8T8uh7VCQC"; 
-      const url = tipo === 'DNI' ? `https://api.decolecta.com/v1/reniec/dni?numero=${docLimpio}` : `https://api.decolecta.com/v1/sunat/ruc?numero=${docLimpio}`;
+    const normalizar = (texto) => (texto || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim();
+    const nombreCuenta = normalizar(usuarioDB ? usuarioDB.nombre : (nombreUsuario || ""));
 
-      const respuestaExterna = await fetch(url, { method: 'GET', headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${TOKEN_DECOLECTA}` } });
-      const data = await respuestaExterna.json();
+    const TOKEN_DECOLECTA = process.env.API_TOKEN_PERU || "sk_20486.C3Wm73CKbkdN7R1An76sPk8T8uh7VCQC"; 
+    const url = tipo === 'DNI' ? `https://api.decolecta.com/v1/reniec/dni?numero=${docLimpio}` : `https://api.decolecta.com/v1/sunat/ruc?numero=${docLimpio}`;
 
-      if (respuestaExterna.ok && data) {
-        if (tipo === 'DNI' && nombreCuenta) {
-          const apPat = normalizar(data.first_last_name || data.first_name);
-          const apMat = normalizar(data.second_last_name);
-          if (!((apPat && nombreCuenta.includes(apPat)) || (apMat && nombreCuenta.includes(apMat)))) {
-            return res.status(403).json({ valido: false, mensaje: "El DNI no corresponde al titular de la cuenta." });
-          }
+    const respuestaExterna = await fetch(url, { method: 'GET', headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${TOKEN_DECOLECTA}` } });
+    const data = await respuestaExterna.json();
+
+    if (respuestaExterna.ok && data) {
+      if (tipo === 'DNI' && nombreCuenta) {
+        const apPat = normalizar(data.first_last_name || data.first_name);
+        const apMat = normalizar(data.second_last_name);
+        if (!((apPat && nombreCuenta.includes(apPat)) || (apMat && nombreCuenta.includes(apMat)))) {
+          return res.status(403).json({ valido: false, mensaje: "El DNI no corresponde al titular de la cuenta." });
         }
-        return res.json({ valido: true, mensaje: "Verificado con éxito." });
-      } else {
-        return res.status(404).json({ valido: false, mensaje: "Documento no hallado en padrones." });
       }
-    });
+      return res.json({ valido: true, mensaje: "Verificado con éxito." });
+    } else {
+      return res.status(404).json({ valido: false, mensaje: "Documento no hallado en padrones." });
+    }
   } catch (error) {
     return res.status(500).json({ valido: false, mensaje: "Error en validación." });
   }
