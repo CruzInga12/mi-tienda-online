@@ -175,7 +175,15 @@ app.get(['/api/categorias', '/api/admin/categorias'], async (req, res) => {
       rows = Array.isArray(result) ? result : (result.rows || []);
     }
 
-    const categorias = rows.map(row => row.categoria).filter(Boolean);
+    // Mapeo seguro que extrae el texto exacto de la categoría sin importar si viene en objeto o array
+    const categorias = rows.map(row => {
+      if (!row) return null;
+      if (typeof row === 'object') {
+        return row.categoria || Object.values(row)[0];
+      }
+      return String(row);
+    }).filter(cat => cat && typeof cat === 'string' && cat.trim() !== '');
+
     res.json(categorias);
   } catch (err) {
     res.status(500).json({ error: 'Error al obtener categorías' });
