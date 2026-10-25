@@ -279,7 +279,8 @@
 
     async function cargarProductosTienda() {
       try {
-        const res = await fetch('/api/productos');
+        // Añadimos un parámetro de marca de tiempo (timestamp) para evitar que el navegador guarde la caché antigua
+        const res = await fetch('/api/productos?_=' + new Date().getTime());
         todosLosProductos = await res.json();
         renderizarProductos(todosLosProductos);
       } catch (error) {
