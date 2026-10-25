@@ -168,9 +168,14 @@ app.get(['/api/categorias', '/api/admin/categorias'], async (req, res) => {
       ? await db.execute('SELECT DISTINCT categoria FROM productos WHERE categoria IS NOT NULL AND categoria != ""')
       : await db.query('SELECT DISTINCT categoria FROM productos WHERE categoria IS NOT NULL AND categoria != ""');
 
-    const rows = isProduction ? (result.rows || []) : (result.rows || result || []);
-    const categorias = rows.map(row => row.categoria).filter(Boolean);
+    let rows = [];
+    if (isProduction) {
+      rows = result.rows || [];
+    } else {
+      rows = Array.isArray(result) ? result : (result.rows || []);
+    }
 
+    const categorias = rows.map(row => row.categoria).filter(Boolean);
     res.json(categorias);
   } catch (err) {
     res.status(500).json({ error: 'Error al obtener categorías' });
