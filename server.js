@@ -165,7 +165,7 @@ app.put(['/api/productos/:id', '/api/admin/productos/:id'], upload.single('image
 app.get(['/api/categorias', '/api/admin/categorias'], async (req, res) => {
   try {
     const result = isProduction
-      ? await db.execute('SELECT DISTINCT categoria FROM productos WHERE categoria IS NOT NULL AND categoria != ""')
+      ? await db.execute({ sql: 'SELECT DISTINCT categoria FROM productos WHERE categoria IS NOT NULL AND categoria != ""' })
       : await db.query('SELECT DISTINCT categoria FROM productos WHERE categoria IS NOT NULL AND categoria != ""');
 
     let rows = [];
@@ -175,18 +175,17 @@ app.get(['/api/categorias', '/api/admin/categorias'], async (req, res) => {
       rows = Array.isArray(result) ? result : (result.rows || []);
     }
 
-    // Mapeo seguro que extrae el texto exacto de la categoría sin importar si viene en objeto o array
     const categorias = rows.map(row => {
       if (!row) return null;
       if (typeof row === 'object') {
         return row.categoria || Object.values(row)[0];
       }
       return String(row);
-    }).filter(cat => cat && typeof cat === 'string' && cat.trim() !== '');
+    }).filter(Boolean);
 
     res.json(categorias);
   } catch (err) {
-    res.status(500).json({ error: 'Error al obtener categorías' });
+    res.json([]);
   }
 });
 
