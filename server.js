@@ -19,7 +19,7 @@ conectarWhatsApp();
 const GOOGLE_CLIENT_ID = '669620373732-8hbnn66m74as41kionmvrsb6440gma4i.apps.googleusercontent.com';
 const clientGoogle = new OAuth2Client(GOOGLE_CLIENT_ID);
 
-// Configuración de Cloudinary para imágenes y archivos
+// Configuración de Cloudinary para imágenes y archivos multimedia
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -28,9 +28,13 @@ cloudinary.config({
 
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
-  params: {
-    folder: 'tienda_uploads',
-    allowed_formats: ['jpg', 'png', 'jpeg', 'webp', 'mp4', 'mov']
+  params: async (req, file) => {
+    return {
+      folder: 'tienda_uploads',
+      resource_type: 'auto',
+      allowed_formats: ['jpg', 'png', 'jpeg', 'webp', 'mp4', 'mov'],
+      public_id: 'prod_' + Date.now()
+    };
   }
 });
 
