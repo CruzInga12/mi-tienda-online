@@ -58,7 +58,7 @@
       const usuario = JSON.parse(localStorage.getItem('usuario'));
       if (!usuario) {
         alert('Debes iniciar sesión.');
-        window.location.href = '/auth.html';
+        window.location.href = '/index.html';
         return;
       }
 
@@ -91,7 +91,7 @@
             // Actualizar localStorage manteniendo el objeto del usuario
             localStorage.setItem('usuario', JSON.stringify({ ...usuario, ...datosActualizados }));
             alert('¡Perfil actualizado con éxito!');
-            window.location.href = '/';
+            window.location.href = '/index.html';
           } else {
             alert(data.error || 'Error al actualizar perfil');
           }

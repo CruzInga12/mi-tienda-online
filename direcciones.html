@@ -221,47 +221,47 @@
       return auth.currentUser || JSON.parse(localStorage.getItem('usuario'));
     }
 
-async function verificarDocumentoReal() {
-  const tipo = document.querySelector('input[name="tipo_documento"]:checked').value;
-  const numero = document.getElementById('numero_documento').value.trim();
-  const lblResultado = document.getElementById('resultado-validacion');
-  
-  // Obtenemos el usuario activo guardado en localStorage o sesión
-  const usuarioActual = JSON.parse(localStorage.getItem('usuarioLogueado')) || {};
+    async function verificarDocumentoReal() {
+      const tipo = document.querySelector('input[name="tipo_documento"]:checked').value;
+      const numero = document.getElementById('numero_documento').value.trim();
+      const lblResultado = document.getElementById('resultado-validacion');
+      
+      // Corregido: obtiene el usuario actual del localStorage con la clave correcta 'usuario'
+      const usuarioActual = JSON.parse(localStorage.getItem('usuario')) || {};
 
-  if (!numero) {
-    alert("Por favor ingresa un número de documento.");
-    return;
-  }
+      if (!numero) {
+        alert("Por favor ingresa un número de documento.");
+        return;
+      }
 
-  lblResultado.style.color = "#666";
-  lblResultado.textContent = "Verificando identidad...";
+      lblResultado.style.color = "#666";
+      lblResultado.textContent = "Verificando identidad...";
 
-  try {
-    const res = await fetch('/api/verificar-documento', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        tipo, 
-        numero, 
-        emailUsuario: usuarioActual.email || "cruzemidiovaldez@gmail.com" // Aquí puedes pasar el email real de la sesión
-      })
-    });
+      try {
+        const res = await fetch('/api/verificar-documento', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            tipo, 
+            numero, 
+            emailUsuario: usuarioActual.email || "cliente@tienda.com" 
+          })
+        });
 
-    const data = await res.json();
+        const data = await res.json();
 
-    if (res.ok && data.valido) {
-      lblResultado.style.color = "#00875a";
-      lblResultado.textContent = data.mensaje;
-    } else {
-      lblResultado.style.color = "#dc2626";
-      lblResultado.textContent = data.mensaje || "Documento no válido.";
+        if (res.ok && data.valido) {
+          lblResultado.style.color = "#00875a";
+          lblResultado.textContent = data.mensaje;
+        } else {
+          lblResultado.style.color = "#dc2626";
+          lblResultado.textContent = data.mensaje || "Documento no válido.";
+        }
+      } catch (e) {
+        lblResultado.style.color = "#dc2626";
+        lblResultado.textContent = "Error al validar el documento.";
+      }
     }
-  } catch (e) {
-    lblResultado.style.color = "#dc2626";
-    lblResultado.textContent = "Error al validar el documento.";
-  }
-}
 
     function abrirModalDireccion(index = -1) {
       document.getElementById('modal-direccion').style.display = 'flex';

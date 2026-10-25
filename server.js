@@ -132,6 +132,7 @@ app.get(['/api/categorias', '/api/admin/categorias'], (req, res) => {
   });
 });
 
+// Reseñas generales y por producto
 app.get(['/api/reviews', '/api/reviews/product/:product_id', '/api/reviews/:product_id'], (req, res) => {
   const product_id = req.params.product_id || req.query.product_id;
   let query = 'SELECT * FROM reviews';
@@ -143,6 +144,22 @@ app.get(['/api/reviews', '/api/reviews/product/:product_id', '/api/reviews/:prod
   query += ' ORDER BY created_at DESC';
   db.all(query, params, (err, rows) => {
     if (err) return res.status(500).json({ error: 'Error al cargar opiniones' });
+    res.json(rows);
+  });
+});
+
+// NUEVO: Ruta específica para obtener reseñas por usuario (soluciona el error en reseñas.html)
+app.get('/api/reviews/user/:usuario_id', (req, res) => {
+  const { usuario_id } = req.params;
+  const query = `
+    SELECT r.*, p.nombre as producto_nombre, p.imagen as producto_imagen 
+    FROM reviews r 
+    LEFT JOIN productos p ON r.product_id = p.id 
+    WHERE r.usuario_id = ? 
+    ORDER BY r.created_at DESC
+  `;
+  db.all(query, [usuario_id], (err, rows) => {
+    if (err) return res.status(500).json({ error: 'Error al obtener reseñas del usuario' });
     res.json(rows);
   });
 });
@@ -229,7 +246,6 @@ app.put('/api/actualizar-password', (req, res) => {
   });
 });
 
-// NUEVO: Cobro Automático directo de Yape
 app.post('/api/pagar-yape', async (req, res) => {
   try {
     const { phoneNumber, otp, items, usuario_id, email } = req.body;
@@ -248,7 +264,7 @@ app.post('/api/pagar-yape', async (req, res) => {
         payer: {
           email: email || 'cliente@tienda.com',
         },
-        token: otp, // Código de aprobación generado en la App Yape
+        token: otp,
       }
     });
 
@@ -264,7 +280,6 @@ app.post('/api/pagar-yape', async (req, res) => {
   }
 });
 
-// Crear preferencia Mercado Pago (Tarjeta)
 app.post('/api/crear-preferencia', async (req, res) => {
   try {
     const body = req.body || {};

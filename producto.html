@@ -152,7 +152,7 @@
             <img id="product-image" src="https://picsum.photos/300" alt="Imagen del producto" class="product-img">
             <div class="product-details">
                 <h1 id="product-name">Cargando producto...</h1>
-                <p class="price" id="product-price">$0.00</p>
+                <p class="price" id="product-price">S/ 0.00</p>
                 <p id="product-description" style="color: #666; line-height: 1.5;">Cargando descripción...</p>
                 <p id="product-stock" style="color: #555; font-size: 14px; font-weight: bold;"></p>
 
@@ -250,10 +250,10 @@
                     } else {
                         carrito.push({
                             id: prodIdReal,
-                            name: nombreProd,
-                            price: precioProd,
-                            image: imagenProd,
-                            cantidad: cantidadSeleccionada
+                            nombre: nombreProd,
+                            precio: Number(precioProd),
+                            cantidad: cantidadSeleccionada,
+                            imagen: imagenProd
                         });
                     }
 
@@ -312,12 +312,11 @@
 
         async function cargarDatosProducto(id) {
             try {
-                const res = await fetch(`/api/products/${id}`);
+                const res = await fetch(`/api/productos/${id}`);
                 if (!res.ok) throw new Error('No se pudo cargar el producto');
                 
                 productoActual = await res.json();
                 
-                // Mapeo flexible para propiedades en español o inglés
                 const nombreProd = productoActual.nombre || productoActual.name || 'Producto sin nombre';
                 const precioProd = productoActual.precio !== undefined ? productoActual.precio : (productoActual.price || 0);
                 const descProd = productoActual.descripcion || productoActual.description || 'Sin descripción disponible.';

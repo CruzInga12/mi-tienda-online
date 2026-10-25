@@ -238,7 +238,7 @@
                 formData.append('comment', comment);
 
                 if (mediaFile) {
-                    formData.append('media', mediaFile); // Envía el video o foto hacia multer en el servidor
+                    formData.append('media', mediaFile);
                 }
 
                 try {
@@ -252,7 +252,7 @@
                     if (response.ok) {
                         alert('¡Reseña y archivo multimedia publicados con éxito!');
                         formNuevaReseña.reset();
-                        cargarReseñas(); // Actualizar la lista automáticamente en pantalla
+                        cargarReseñas();
                     } else {
                         alert('Error: ' + (resultado.error || 'No se pudo guardar la reseña'));
                     }
