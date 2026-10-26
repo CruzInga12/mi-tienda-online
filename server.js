@@ -140,28 +140,6 @@ app.get(['/api/productos/:id', '/api/admin/productos/:id', '/api/products/:id'],
   }
 });
 
-app.put(['/api/productos/:id', '/api/admin/productos/:id'], upload.single('imagen'), async (req, res) => {
-  const { id } = req.params;
-  const body = req.body || {};
-  const nombre = body.nombre || body.name;
-  const precio = body.precio || body.price;
-  const stock = body.stock || body.quantity;
-  const categoria = body.categoria || body.category || 'General';
-
-  let imagenNueva = req.file ? req.file.path : (body.imagen || body.image || null);
-  const query = imagenNueva 
-    ? `UPDATE productos SET nombre = ?, precio = ?, stock = ?, categoria = ?, imagen = ? WHERE id = ?`
-    : `UPDATE productos SET nombre = ?, precio = ?, stock = ?, categoria = ? WHERE id = ?`;
-  const params = imagenNueva ? [nombre, Number(precio), Number(stock), categoria, imagenNueva, Number(id)] : [nombre, Number(precio), Number(stock), categoria, Number(id)];
-
-  try {
-    isProduction ? await db.execute({ sql: query, args: params }) : await db.query(query, params);
-    res.json({ mensaje: 'Producto actualizado correctamente' });
-  } catch (err) {
-    res.status(500).json({ error: 'Error al actualizar el producto' });
-  }
-});
-
 app.get(['/api/categorias', '/api/admin/categorias'], async (req, res) => {
   try {
     const result = isProduction
@@ -299,15 +277,36 @@ app.post('/api/auth/google', async (req, res) => {
   }
 });
 
-app.put('/api/actualizar-perfil', async (req, res) => {
-  const { id, nombre, ciudad, departamento } = req.body;
+app.put(['/api/productos/:id', '/api/admin/productos/:id'], upload.single('imagen'), async (req, res) => {
+  const { id } = req.params;
+  const body = req.body || {};
+  const nombre = body.nombre || body.name || 'Producto sin nombre';
+  const precio = Number(body.precio || body.price || 0);
+  const stock = Number(body.stock || body.quantity || 0);
+  const categoria = body.categoria || body.category || 'General';
+  const productoId = Number(id);
+
+  let imagenNueva = req.file ? req.file.path : (body.imagen || body.image || null);
+
   try {
-    const query = `UPDATE usuarios SET nombre = ?, ciudad = ?, departamento = ? WHERE id = ?`;
-    const params = [nombre, ciudad, departamento, id];
-    isProduction ? await db.execute({ sql: query, args: params }) : await db.query(query, params);
-    res.json({ message: 'Perfil actualizado correctamente' });
+    let query, params;
+    if (imagenNueva) {
+      query = `UPDATE productos SET nombre = ?, precio = ?, stock = ?, categoria = ?, imagen = ? WHERE id = ?`;
+      params = [nombre, precio, stock, categoria, imagenNueva, productoId];
+    } else {
+      query = `UPDATE productos SET nombre = ?, precio = ?, stock = ?, categoria = ? WHERE id = ?`;
+      params = [nombre, precio, stock, categoria, productoId];
+    }
+
+    if (isProduction) {
+      await db.execute({ sql: query, args: params });
+    } else {
+      await db.query(query, params);
+    }
+
+    res.json({ mensaje: 'Producto actualizado correctamente' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Error al actualizar el producto' });
   }
 });
 
@@ -319,7 +318,7 @@ app.put('/api/actualizar-password', async (req, res) => {
       : (await db.query('SELECT * FROM usuarios WHERE id = ?', [id])).rows[0];
 
     if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
-    if (usuario.password !== passwordActual) return res.status(400).json({ error: 'La contraseña actual es incorrecta' });
+    if (usuario.password !== passwordActual) return res.status(400).json({ error: 'La contraseña actual is incorrecta' });
 
     const qUp = 'UPDATE usuarios SET password = ? WHERE id = ?';
     isProduction ? await db.execute({ sql: qUp, args: [passwordNueva, id] }) : await db.query(qUp, [passwordNueva, id]);
