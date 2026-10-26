@@ -10,7 +10,7 @@ let sock = null;
 
 async function conectarWhatsApp() {
     // Usamos 'auth_info_baileys_v3' para limpiar la sesión corrupta anterior
-    const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys_v4');
+    const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys_v5');
     
     sock = makeWASocket({
         auth: state,

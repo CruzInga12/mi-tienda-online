@@ -14,7 +14,11 @@ const { conectarWhatsApp, enviarAlertaWhatsApp } = require('./whatsapp-bot');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-conectarWhatsApp();
+try {
+  conectarWhatsApp();
+} catch (e) {
+  console.log("Aviso: WhatsApp bot no pudo iniciar, pero el servidor continúa operativo.");
+}
 
 const GOOGLE_CLIENT_ID = '669620373732-8hbnn66m74as41kionmvrsb6440gma4i.apps.googleusercontent.com';
 const clientGoogle = new OAuth2Client(GOOGLE_CLIENT_ID);
@@ -54,33 +58,46 @@ app.use(express.static(__dirname));
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 app.get('/producto.html', (req, res) => res.sendFile(path.join(__dirname, 'producto.html')));
 
+// Ruta de Login para Administradores
 app.post('/api/login', express.json(), async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password } = req.body || {};
+  if (!email || !password) {
+    return res.status(400).json({ success: false, message: "El correo y la contraseña son obligatorios" });
+  }
+
   try {
     const row = isProduction 
       ? (await db.execute({ sql: `SELECT * FROM admins WHERE email = ? AND password = ?`, args: [email, password] })).rows[0]
       : (await db.query(`SELECT * FROM admins WHERE email = ? AND password = ?`, [email, password])).rows[0];
 
-    if (row) res.json({ success: true, message: "Bienvenido al panel" });
-    else res.status(401).json({ success: false, message: "Correo o contraseña incorrectos" });
+    if (row) {
+      res.json({ success: true, message: "Bienvenido al panel de administración" });
+    } else {
+      res.status(401).json({ success: false, message: "Correo o contraseña incorrectos" });
+    }
   } catch (err) {
     return res.status(500).json({ success: false, message: "Error en el servidor" });
   }
 });
 
+// Ruta para Registrar Administradores (Probada y optimizada para Apidog)
 app.post('/api/admin/registrar', express.json(), async (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) return res.status(400).json({ success: false, message: "El correo y la contraseña son obligatorios" });
+  const { email, password } = req.body || {};
+  if (!email || !password) {
+    return res.status(400).json({ success: false, message: "El correo y la contraseña son obligatorios" });
+  }
 
   try {
     const result = isProduction
       ? await db.execute({ sql: `INSERT INTO admins (email, password) VALUES (?, ?)`, args: [email, password] })
       : await db.query(`INSERT INTO admins (email, password) VALUES (?, ?)`, [email, password]);
 
-    res.status(201).json({ success: true, message: "Administrador agregado correctamente", id: result.insertId });
+    res.status(201).json({ success: true, message: "Administrador agregado correctamente", id: result.insertId || result.lastInsertRowid });
   } catch (err) {
-    if (err.message.includes('UNIQUE')) return res.status(400).json({ success: false, message: "Este correo ya está registrado como administrador." });
-    return res.status(500).json({ success: false, message: "Error al registrar el administrador" });
+    if (err.message && err.message.includes('UNIQUE')) {
+      return res.status(400).json({ success: false, message: "Este correo ya está registrado como administrador." });
+    }
+    return res.status(500).json({ success: false, message: "Error al registrar el administrador: " + err.message });
   }
 });
 
@@ -231,23 +248,6 @@ app.post('/api/register', async (req, res) => {
   } catch (err) {
     if (err.message.includes('UNIQUE')) return res.status(400).json({ error: 'El correo electrónico ya está registrado.' });
     return res.status(500).json({ error: 'Error al registrar usuario.' });
-  }
-});
-
-app.post('/api/login', async (req, res) => {
-  const { email, password } = req.body || {};
-  try {
-    const usuario = isProduction
-      ? (await db.execute({ sql: 'SELECT * FROM usuarios WHERE email = ? AND password = ?', args: [email, password] })).rows[0]
-      : (await db.query('SELECT * FROM usuarios WHERE email = ? AND password = ?', [email, password])).rows[0];
-
-    if (!usuario) return res.status(401).json({ error: 'Credenciales incorrectas.' });
-    res.json({
-      token: `fake-jwt-token-${usuario.id}`,
-      usuario: { id: usuario.id, nombre: usuario.nombre, email: usuario.email, rol: usuario.rol, ciudad: usuario.ciudad || '', departamento: usuario.departamento || '' }
-    });
-  } catch (err) {
-    res.status(401).json({ error: 'Credenciales incorrectas.' });
   }
 });
 
@@ -497,7 +497,7 @@ app.post('/api/verificar-documento', async (req, res) => {
     const nombreCuenta = normalizar(usuarioDB ? usuarioDB.nombre : (nombreUsuario || ""));
 
     const TOKEN_DECOLECTA = process.env.API_TOKEN_PERU || "sk_20486.C3Wm73CKbkdN7R1An76sPk8T8uh7VCQC"; 
-    const url = tipo === 'DNI' ? `https://api.decolecta.com/v1/reniec/dni?numero=${docLンプio}` : `https://api.decolecta.com/v1/sunat/ruc?numero=${docLimpio}`;
+    const url = tipo === 'DNI' ? `https://api.decolecta.com/v1/reniec/dni?numero=${docLimpio}` : `https://api.decolecta.com/v1/sunat/ruc?numero=${docLimpio}`;
 
     const respuestaExterna = await fetch(url, { method: 'GET', headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${TOKEN_DECOLECTA}` } });
     const data = await respuestaExterna.json();
