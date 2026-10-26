@@ -497,7 +497,7 @@ app.post('/api/verificar-documento', async (req, res) => {
     const nombreCuenta = normalizar(usuarioDB ? usuarioDB.nombre : (nombreUsuario || ""));
 
     const TOKEN_DECOLECTA = process.env.API_TOKEN_PERU || "sk_20486.C3Wm73CKbkdN7R1An76sPk8T8uh7VCQC"; 
-    const url = tipo === 'DNI' ? `https://api.decolecta.com/v1/reniec/dni?numero=${docLimpio}` : `https://api.decolecta.com/v1/sunat/ruc?numero=${docLimpio}`;
+    const url = tipo === 'DNI' ? `https://api.decolecta.com/v1/reniec/dni?numero=${docLンプio}` : `https://api.decolecta.com/v1/sunat/ruc?numero=${docLimpio}`;
 
     const respuestaExterna = await fetch(url, { method: 'GET', headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${TOKEN_DECOLECTA}` } });
     const data = await respuestaExterna.json();
