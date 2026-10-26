@@ -318,7 +318,7 @@ app.put('/api/actualizar-password', async (req, res) => {
       : (await db.query('SELECT * FROM usuarios WHERE id = ?', [id])).rows[0];
 
     if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
-    if (usuario.password !== passwordActual) return res.status(400).json({ error: 'La contraseña actual is incorrecta' });
+    if (usuario.password !== passwordActual) return res.status(400).json({ error: 'La contraseña actual es incorrecta' });
 
     const qUp = 'UPDATE usuarios SET password = ? WHERE id = ?';
     isProduction ? await db.execute({ sql: qUp, args: [passwordNueva, id] }) : await db.query(qUp, [passwordNueva, id]);
